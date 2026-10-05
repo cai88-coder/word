@@ -885,12 +885,22 @@ function showNow(w) {
   renderLv($('nowLv'), w.word);
   markPlaying();
 }
+// 拼读：把「a - p - p - l - e」换成字母的标准读音，避免语音把字母当单词读
+const LETTER = {a:'ay', b:'bee', c:'see', d:'dee', e:'ee', f:'eff', g:'gee', h:'aitch', i:'eye', j:'jay', k:'kay', l:'el', m:'em',
+  n:'en', o:'oh', p:'pee', q:'cue', r:'ar', s:'ess', t:'tee', u:'you', v:'vee', w:'double-you', x:'ex', y:'why', z:'zee'};
+function spellForTTS(text) {
+  const t = String(text || '').trim();
+  if (!t) return '';
+  // 只有「单个字母 + 分隔符」时才转换；用户自己写的其他拆解内容原样朗读
+  if (!/^[a-z](?:[\s\-,.·]+[a-z])*$/i.test(t)) return t;
+  return t.toLowerCase().split(/[\s\-,.·]+/).filter(Boolean).map(c => LETTER[c] || c).join(', ') + '.';
+}
 async function playWord(w, tok) {
   const ok = () => tok === playToken && !skipNow;
   await speak(w.word, S.rateWord); if (!ok()) return;
   await wait(S.pWord * 1000); if (!ok()) return;
   if (w.example) { await speak(w.example, S.rateEx); if (!ok()) return; await wait(S.pEx * 1000); if (!ok()) return; }
-  if (w.pron_split) { await speak(w.pron_split, S.rateSp); if (!ok()) return; await wait(S.pSp * 1000); }
+  if (w.pron_split) { await speak(spellForTTS(w.pron_split), S.rateSp); if (!ok()) return; await wait(S.pSp * 1000); }
 }
 function startPlay() {
   if (!hasTTS) { setP('这个浏览器不支持语音朗读'); return false; }
