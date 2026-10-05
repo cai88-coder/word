@@ -166,9 +166,16 @@ label.f textarea,label.f input{margin-top:4px}
       </div>
       <div id="impStatus" class="muted small" style="margin-top:8px"></div>
       <div id="failBox" hidden>
-        <div class="failhead"><span>抓取失败</span><button class="btn small" id="retryAll">全部重试</button><button class="btn small ghost" id="clearFail">清空</button></div>
-        <div id="failList" class="chips"></div>
-        <div class="muted small" style="margin-top:6px">点单词可手动添加，再自己填释义和例句</div>
+        <div id="failNet">
+          <div class="failhead"><span>⚠️ 网络原因没抓到释义（<b id="failNetN"></b>）</span><button class="btn small" id="retryAll">重新抓取</button></div>
+          <div class="muted small">单词已在单词库里，可以正常朗读。可能是网络不好或词典服务器暂时故障，过一会儿再点「重新抓取」。</div>
+          <div id="failNetList" class="chips"></div>
+        </div>
+        <div id="failNf">
+          <div class="failhead"><span>📕 词典没有收录（<b id="failNfN"></b>）</span><button class="btn small ghost" id="clearFail">不再提示</button></div>
+          <div class="muted small">多为缩写或词组（如 IBC、RQ），也已加入单词库。点单词可自己填写释义。</div>
+          <div id="failNfList" class="chips"></div>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -217,6 +224,16 @@ label.f textarea,label.f input{margin-top:4px}
       <div class="sub">复习轮次</div>
       <div class="inline"><span id="roundTxt" class="muted"></span><button class="btn small" id="resetRound">重置为第 1 轮</button></div>
       <div class="muted small">很陌生/陌生：每轮都读；有点陌生：偶数轮；有点印象：每 3 轮一次</div>
+      <div class="sub">词典</div>
+      <div class="muted small" id="dictInfo">内置词典：检查中…</div>
+      <label class="f" style="margin-top:8px">韦氏词典 Key（可选，只保存在本机）
+        <input type="text" id="mwKey" placeholder="没有可以不填" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off">
+      </label>
+      <div class="inline">
+        <select id="mwType" style="flex:1"><option value="learners">Learner's 学习者词典</option><option value="collegiate">Collegiate 大学词典</option></select>
+        <button class="btn small" id="mwSave">保存并测试</button>
+      </div>
+      <div class="muted small" id="mwInfo" style="margin-top:6px">查词顺序：内置词典 → 韦氏（填了 key 才用）→ 其他免费词典</div>
       <div class="sub">备份</div>
       <div class="muted small" id="bkLast"></div>
       <div class="inline">
@@ -323,7 +340,7 @@ function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; c
 
 /* ---------- 设置 ---------- */
 const DEF = {rateWord:.95, rateEx:.85, rateSp:.8, pWord:1.2, pEx:1.2, pSp:1.5, voice:'', hideDef:false, round:1,
-             lastBackup:0, bkDays:7, snoozeUntil:0, view:'', playList:'', impTo:'', migrated:false};
+             lastBackup:0, bkDays:7, snoozeUntil:0, view:'', playList:'', impTo:'', migrated:false, mwKey:'', mwType:'learners'};
 let S = {...DEF};
 try { S = {...DEF, ...JSON.parse(localStorage.getItem('srs_settings') || '{}')}; } catch (e) {}
 const saveS = () => { try { localStorage.setItem('srs_settings', JSON.stringify(S)); } catch (e) {} };
@@ -333,11 +350,12 @@ let db;
 const words = new Map(), lists = new Map(), sel = new Set();
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('srs_words_db', 2);
+    const r = indexedDB.open('srs_words_db', 3);
     r.onupgradeneeded = () => {
       const d = r.result;
       if (!d.objectStoreNames.contains('words')) d.createObjectStore('words', {keyPath:'word'});
       if (!d.objectStoreNames.contains('lists')) d.createObjectStore('lists', {keyPath:'id'});
+      if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
     };
     r.onsuccess = () => { db = r.result; res(); };
     r.onerror = () => rej(r.error);
@@ -436,26 +454,169 @@ function parseEntry(w, data) {
   }
   return newRecord(w, {definition: (pos ? `(${pos}) ` : '') + def, example: ex, ipa});
 }
+// 带超时的 fetch
+async function getJSON(url, ms) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, {signal: ctl.signal});
+    if (r.status === 404) return {notFound: true};
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return {data: await r.json()};
+  } finally { clearTimeout(t); }
+}
+const stripHTML = h => { const d = document.createElement('div'); d.innerHTML = String(h || ''); return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+const POS = {n:'noun', v:'verb', adj:'adjective', adv:'adverb', u:''};
+
+// 来源1：dictionaryapi.dev（有例句、美音音标）
+async function fromDictApi(w) {
+  const r = await getJSON('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(w), 7000);
+  if (r.notFound || !Array.isArray(r.data)) return null;
+  const rec = parseEntry(w, r.data);
+  return rec.definition ? rec : null;
+}
+// 来源2：Datamuse（释义 + 美式音标，很稳定）
+async function fromDatamuse(w) {
+  const r = await getJSON(`https://api.datamuse.com/words?sp=${encodeURIComponent(w)}&md=dr&ipa=1&max=1`, 8000);
+  const e = Array.isArray(r.data) && r.data[0];
+  if (!e || String(e.word).toLowerCase() !== w || !(e.defs || []).length) return null;
+  const [pos, def] = String(e.defs[0]).split('\t');
+  const ipaTag = (e.tags || []).find(t => t.startsWith('ipa_pron:'));
+  const p = POS[pos] ?? pos;
+  return newRecord(w, {definition: (p ? `(${p}) ` : '') + (def || '').trim(), ipa: ipaTag ? `/${ipaTag.slice(9)}/` : ''});
+}
+// 来源3：Wiktionary，只用来补例句
+async function wikiExample(w) {
+  try {
+    const r = await getJSON('https://en.wiktionary.org/api/rest_v1/page/definition/' + encodeURIComponent(w), 6000);
+    for (const sec of ((r.data && r.data.en) || [])) for (const d of (sec.definitions || [])) {
+      const ex = (d.parsedExamples && d.parsedExamples[0] && d.parsedExamples[0].example) || (d.examples && d.examples[0]);
+      const txt = stripHTML(ex);
+      if (txt && txt.length < 220) return txt;
+    }
+  } catch (e) {}
+  return '';
+}
+
+/* 内置词典（dict.json，与 index.html 放在同一目录） */
+const DICT_VER = 'wn30-cmu-1';
+const POSW = {n:'noun', v:'verb', a:'adjective', r:'adverb'};
+let localDict = null, localDictState = 'loading';
+const kvGet = k => wrap(store('kv', 'readonly').get(k));
+const kvPut = (k, v) => wrap(store('kv', 'readwrite').put(v, k));
+async function loadLocalDict() {
+  try {
+    const cached = await kvGet('dict');
+    if (cached && cached.ver === DICT_VER) { localDict = cached.data; }
+  } catch (e) {}
+  if (!localDict) {
+    try {
+      const r = await fetch('dict.json', {cache: 'no-cache'});
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      localDict = await r.json();
+      try { await kvPut('dict', {ver: DICT_VER, data: localDict}); } catch (e) {}
+    } catch (e) { localDict = null; }
+  }
+  localDictState = localDict ? 'ok' : 'missing';
+  $('dictInfo').textContent = localDict ? `内置词典：已加载 ${Object.keys(localDict).length.toLocaleString()} 个词，查词不用联网` : '内置词典：没找到 dict.json，只能联网查词';
+}
+function localEntry(w) {
+  if (!localDict) return null;
+  const e = localDict[w];
+  if (!e) return null;
+  return newRecord(w, {definition: `(${POSW[e[0]] || e[0]}) ${e[1]}`, example: e[2] || '', ipa: e[3] || ''});
+}
+function localLemma(w) { // 复数、过去式等：借用原形的释义
+  if (!localDict || w.includes(' ')) return null;
+  const tries = [];
+  if (w.endsWith('ies')) tries.push(w.slice(0, -3) + 'y');
+  if (w.endsWith('es')) tries.push(w.slice(0, -2));
+  if (w.endsWith('s')) tries.push(w.slice(0, -1));
+  if (w.endsWith('ied')) tries.push(w.slice(0, -3) + 'y');
+  if (w.endsWith('ed')) tries.push(w.slice(0, -2), w.slice(0, -1));
+  if (w.endsWith('ing')) tries.push(w.slice(0, -3), w.slice(0, -3) + 'e');
+  for (const t of tries) {
+    const e = localDict[t];
+    if (e) return newRecord(w, {definition: `(${POSW[e[0]] || e[0]}) ${e[1]}（原形 ${t}）`, example: e[2] || '', ipa: ''});
+  }
+  return null;
+}
+
+/* 韦氏词典（需要 key） */
+const mwClean = t => String(t || '').replace(/\{(it|wi|phrase|b|inf|sup|sc)\}|\{\/(it|wi|phrase|b|inf|sup|sc)\}/g, '').replace(/\{bc\}/g, '').replace(/\{[^}]*\}/g, '').replace(/\s+/g, ' ').trim();
+function mwFindExample(node) {
+  if (!node || typeof node !== 'object') return '';
+  if (Array.isArray(node)) {
+    if (node[0] === 'vis' && Array.isArray(node[1]) && node[1][0] && node[1][0].t) return mwClean(node[1][0].t);
+    for (const x of node) { const r = mwFindExample(x); if (r) return r; }
+    return '';
+  }
+  for (const k of Object.keys(node)) { const r = mwFindExample(node[k]); if (r) return r; }
+  return '';
+}
+async function fromMW(w, timeout = 8000) {
+  if (!S.mwKey) return null;
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeout);
+  let txt;
+  try {
+    const r = await fetch(`https://www.dictionaryapi.com/api/v3/references/${S.mwType || 'learners'}/json/${encodeURIComponent(w)}?key=${encodeURIComponent(S.mwKey)}`, {signal: ctl.signal});
+    txt = await r.text();
+  } finally { clearTimeout(t); }
+  let data;
+  try { data = JSON.parse(txt); } catch (e) { const err = new Error('mwkey'); err.detail = txt.slice(0, 120); throw err; }
+  if (!Array.isArray(data)) return null;
+  const objs = data.filter(e => e && typeof e === 'object' && e.meta);
+  if (!objs.length) return null; // 只返回了拼写建议 = 没有这个词
+  const e = objs.find(o => String(o.meta.id).split(':')[0].toLowerCase() === w) || objs[0];
+  const def = (e.shortdef || [])[0];
+  if (!def) return null;
+  const pr = e.hwi && e.hwi.prs && e.hwi.prs[0];
+  const ipa = pr ? (pr.ipa || pr.mw || '') : '';
+  return newRecord(w, {definition: (e.fl ? `(${e.fl}) ` : '') + mwClean(def), example: mwFindExample(e.def) || '', ipa: ipa ? `/${ipa}/` : ''});
+}
+
+let dictFails = 0, mwFails = 0, exFails = 0; // 每批重置；连续失败就跳过该来源
+async function remoteExample(w) {
+  if (exFails >= 2) return '';
+  try {
+    if (S.mwKey && mwFails < 2) { const r = await fromMW(w, 5000); if (r && r.example) { exFails = 0; return r.example; } }
+  } catch (e) { mwFails++; }
+  if (dictFails < 2) {
+    try { const r = await fromDictApi(w); exFails = 0; if (r && r.example) return r.example; } catch (e) { dictFails++; }
+  }
+  const ex = await wikiExample(w);
+  if (!ex && dictFails >= 2 && (!S.mwKey || mwFails >= 2)) exFails++;
+  return ex;
+}
+// 返回：记录 / null(所有词典都查不到)；所有在线来源都连不上且内置也没有时抛错
 async function fetchWord(w) {
+  const loc = localEntry(w);
+  if (loc) { if (!loc.example) loc.example = await remoteExample(w); return loc; }
+  let answered = false;
+  if (S.mwKey && mwFails < 2) {
+    try { const rec = await fromMW(w); mwFails = 0; answered = true; if (rec) return rec; } catch (e) { mwFails++; }
+  }
+  if (dictFails < 2) {
+    try { const rec = await fromDictApi(w); dictFails = 0; answered = true; if (rec) return rec; } catch (e) { dictFails++; }
+  }
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const ctl = new AbortController();
-      const t = setTimeout(() => ctl.abort(), 8000);
-      const r = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(w), {signal: ctl.signal});
-      clearTimeout(t);
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return parseEntry(w, await r.json());
-    } catch (e) {
-      if (attempt === 1) throw e;
-      await sleep(900);
-    }
+      const rec = await fromDatamuse(w);
+      answered = true;
+      if (rec) { if (!rec.example) rec.example = await wikiExample(w); return rec; }
+      break;
+    } catch (e) { if (attempt === 0) await sleep(1000); }
   }
+  const lem = localLemma(w);
+  if (lem) return lem;
+  if (answered) return null;
+  throw new Error('network');
 }
 
 /* ---------- 导入 ---------- */
 let importing = false;
-const failed = new Map();
+const NET_PAUSE = 4; // 连续这么多个连不上，就暂停抓取
 const impStatus = t => { $('impStatus').textContent = t; };
 function setImpBusy(b) { ['pasteBtn','lookupBtn','retryAll'].forEach(id => $(id).disabled = b); $('txtFile').disabled = b; }
 const tokenize = text => String(text).split(/[\r\n,;，；、\t]+/).map(norm).filter(w => /[a-z]/.test(w));
@@ -463,6 +624,44 @@ async function addToImpTarget(arr) {
   if (!S.impTo || !lists.has(S.impTo)) return '';
   const n = await addToList(S.impTo, arr);
   return n ? `，${n} 个加入「${lists.get(S.impTo).name}」` : '';
+}
+
+// 抓取并保存。不管抓没抓到，单词都会进单词库（可以先朗读），没抓到的做标记以后补。
+async function processWords(targets, label) {
+  importing = true; setImpBusy(true); dictFails = 0; mwFails = 0; exFails = 0;
+  let ok = 0, nf = 0, net = 0, streak = 0, paused = false;
+  for (let i = 0; i < targets.length; i++) {
+    const w = targets[i];
+    const cur = words.get(w) || newRecord(w);
+    if (paused) {
+      if (!words.has(w)) { cur.fail = 'net'; await dbPut(cur); words.set(w, cur); }
+      net++;
+      continue;
+    }
+    impStatus(`${label} ${i + 1}/${targets.length}：${w}`);
+    try {
+      const rec = await fetchWord(w);
+      streak = 0;
+      if (rec) { cur.definition = rec.definition; cur.example = rec.example; cur.ipa = rec.ipa; delete cur.fail; ok++; }
+      else { cur.fail = 'nf'; nf++; }
+    } catch (e) {
+      cur.fail = 'net'; net++;
+      if (++streak >= NET_PAUSE && i < targets.length - 1) paused = true;
+    }
+    await dbPut(cur); words.set(w, cur);
+    if (i % 5 === 4 || i === targets.length - 1 || paused) { renderList(); renderLists(); renderFail(); }
+    if (!paused && i < targets.length - 1) await sleep(250);
+  }
+  importing = false; setImpBusy(false);
+  renderList(); renderLists(); renderFail();
+  return {ok, nf, net, paused};
+}
+function resultText(r, total) {
+  let t = `${r.ok} 个抓到释义`;
+  if (r.nf) t += `，${r.nf} 个词典没收录`;
+  if (r.net) t += `，${r.net} 个因网络没抓到`;
+  if (r.paused) t += `。连续 ${NET_PAUSE} 个单词所有词典都连不上，已暂停抓取。单词都已放进单词库，可以正常朗读；过一会儿点下方「重新抓取」补上释义`;
+  return t;
 }
 
 async function importList(raw) {
@@ -477,47 +676,45 @@ async function importList(raw) {
   }
   let note = '';
   if (list.length > 500) { note = '（单次上限 500，已取前 500 个）'; list = list.slice(0, 500); }
-  importing = true; setImpBusy(true);
-  let ok = 0;
-  for (let i = 0; i < list.length; i++) {
-    const w = list[i];
-    impStatus(`抓取中 ${i + 1}/${list.length}：${w} ${note}`);
-    try {
-      const rec = await fetchWord(w);
-      if (rec) { await dbPut(rec); words.set(w, rec); failed.delete(w); ok++; }
-      else failed.set(w, '词典未收录');
-    } catch (e) { failed.set(w, '网络错误'); }
-    if (i % 5 === 4 || i === list.length - 1) { renderList(); renderLists(); }
-    renderFail();
-    if (i < list.length - 1) await sleep(250);
-  }
-  importing = false; setImpBusy(false);
+  const r = await processWords(list, '抓取中');
   const extra = await addToImpTarget(all);
-  const bad = list.length - ok;
-  impStatus(`完成：新增 ${ok} 个${skipped ? `，跳过已有 ${skipped} 个` : ''}${bad ? `，失败 ${bad} 个` : ''}${extra}`);
+  impStatus(`完成：新加入 ${list.length} 个单词${note}${skipped ? `，跳过已有 ${skipped} 个` : ''}${extra}。其中 ${resultText(r)}。`);
   checkBackup();
 }
 
+async function retryNet() {
+  if (importing) return;
+  const list = [...words.values()].filter(w => w.fail === 'net').sort(byOld).map(w => w.word);
+  if (!list.length) return;
+  const r = await processWords(list, '重新抓取');
+  impStatus(`重新抓取完成：${resultText(r)}。`);
+}
+
 function renderFail() {
-  $('failBox').hidden = !failed.size;
-  $('failList').innerHTML = [...failed].map(([w, why]) => `<button class="fchip" data-w="${esc(w)}" title="${esc(why)}">${esc(w)}</button>`).join('');
+  const all = [...words.values()].sort(byOld);
+  const net = all.filter(w => w.fail === 'net').map(w => w.word);
+  const nf = all.filter(w => w.fail === 'nf').map(w => w.word);
+  const chips = arr => arr.slice(0, 40).map(w => `<button class="fchip" data-w="${esc(w)}">${esc(w)}</button>`).join('') +
+    (arr.length > 40 ? `<span class="muted small" style="align-self:center">…等 ${arr.length} 个</span>` : '');
+  $('failBox').hidden = !net.length && !nf.length;
+  $('failNet').hidden = !net.length; $('failNetN').textContent = net.length; $('failNetList').innerHTML = chips(net);
+  $('failNf').hidden = !nf.length; $('failNfN').textContent = nf.length; $('failNfList').innerHTML = chips(nf);
 }
 
 async function lookup() {
   const w = norm($('lookupIn').value);
   if (!w) return;
-  if (words.has(w)) { await addToImpTarget([w]); openDetail(w); $('lookupIn').value = ''; return; }
+  const ex = words.get(w);
+  if (ex && ex.fail !== 'net') { await addToImpTarget([w]); openDetail(w); $('lookupIn').value = ''; return; }
   if (importing) { impStatus('正在批量导入，请稍候再查'); return; }
-  setImpBusy(true); impStatus(`查询 ${w}…`);
-  try {
-    const rec = await fetchWord(w);
-    if (rec) {
-      await dbPut(rec); words.set(w, rec); failed.delete(w);
-      const extra = await addToImpTarget([w]);
-      renderList(); renderLists(); renderFail(); impStatus(`已添加 ${w}${extra}`); $('lookupIn').value = ''; openDetail(w);
-    } else { failed.set(w, '词典未收录'); renderFail(); impStatus(`词典没有收录「${w}」，可在下方失败列表点它手动添加`); }
-  } catch (e) { failed.set(w, '网络错误'); renderFail(); impStatus('网络错误，请检查网络后重试'); }
-  finally { setImpBusy(false); }
+  const r = await processWords([w], '查询');
+  const extra = await addToImpTarget([w]);
+  $('lookupIn').value = '';
+  if (r.ok) impStatus(`已添加 ${w}${extra}`);
+  else if (r.nf) impStatus(`词典没有收录「${w}」，已加入单词库，可以自己填释义${extra}`);
+  else impStatus(`连不上词典服务器，「${w}」已先加入单词库（可以朗读），稍后点「重新抓取」补释义${extra}`);
+  openDetail(w);
+  checkBackup();
 }
 
 /* ---------- 单词库列表 ---------- */
@@ -538,7 +735,7 @@ function renderList() {
   if (words.size && inList && !base.length) empty = '这个列表还没有单词。<br>切到「全部单词」，勾选单词 → 加入列表。';
   else if (words.size) empty = '没有匹配的单词';
   $('list').innerHTML = visible.length
-    ? visible.map(w => `<li data-w="${esc(w.word)}"><input type="checkbox" class="ck" ${sel.has(w.word) ? 'checked' : ''} aria-label="选择 ${esc(w.word)}"><div class="wmain"><b>${esc(w.word)}</b><span class="wdef">${esc(w.definition || '（无释义）')}</span></div><span class="chip l${w.level}">${LV[w.level]}</span></li>`).join('')
+    ? visible.map(w => `<li data-w="${esc(w.word)}"><input type="checkbox" class="ck" ${sel.has(w.word) ? 'checked' : ''} aria-label="选择 ${esc(w.word)}"><div class="wmain"><b>${esc(w.word)}</b><span class="wdef">${esc(w.definition || (w.fail === 'net' ? '（待抓取释义）' : '（无释义）'))}</span></div><span class="chip l${w.level}">${LV[w.level]}</span></li>`).join('')
     : `<li class="emptyli">${empty}</li>`;
   markPlaying();
 }
@@ -563,7 +760,7 @@ async function deleteWords(arr) {
     l.words = l.words.filter(w => words.has(w));
     if (l.words.length !== b) await saveList(l);
   }
-  renderLists(); renderList(); checkBackup();
+  renderLists(); renderList(); renderFail(); checkBackup();
 }
 function renderLv(box, word) {
   const w = words.get(word);
@@ -805,7 +1002,7 @@ async function importBackup(file) {
       if (ck.length) { const l = await createList('备份恢复的列表'); await addToList(l.id, ck); ln = 1; }
     }
     if (!Array.isArray(data) && data.round > 0) { S.round = data.round; saveS(); updateRoundUI(); }
-    renderLists(); renderList(); checkBackup();
+    renderLists(); renderList(); renderFail(); checkBackup();
     alert(`已恢复 ${clean.length} 个单词${ln ? `、${ln} 个播放列表` : ''}`);
   } catch (e) { alert('导入失败：' + e.message); }
 }
@@ -867,15 +1064,13 @@ function bind() {
     else S.impTo = e.target.value;
     renderLists();
   };
-  $('retryAll').onclick = () => importList([...failed.keys()]);
-  $('clearFail').onclick = () => { failed.clear(); renderFail(); };
-  $('failList').onclick = async e => {
-    const b = e.target.closest('[data-w]'); if (!b) return;
-    const w = b.dataset.w;
-    if (!words.has(w)) { const rec = newRecord(w); await dbPut(rec); words.set(w, rec); }
-    await addToImpTarget([w]);
-    failed.delete(w); renderFail(); renderList(); renderLists(); openDetail(w);
+  $('retryAll').onclick = retryNet;
+  $('clearFail').onclick = async () => {
+    const ch = [...words.values()].filter(w => w.fail === 'nf');
+    ch.forEach(w => { delete w.fail; });
+    await dbPutMany(ch); renderFail();
   };
+  $('failBox').addEventListener('click', e => { const b = e.target.closest('.fchip[data-w]'); if (b) openDetail(b.dataset.w); });
 
   $('viewSel').onchange = e => { S.view = e.target.value; sel.clear(); renderLists(); renderList(); };
   $('newListBtn').onclick = async () => {
@@ -936,7 +1131,9 @@ function bind() {
     renderDLists();
   };
   $('dSave').onclick = async () => {
-    await update(dw, {definition:$('dDef').value.trim(), example:$('dEx').value.trim(), ipa:$('dIpa').value.trim(), pron_split:$('dSp').value.trim()});
+    const def = $('dDef').value.trim();
+    await update(dw, {definition:def, example:$('dEx').value.trim(), ipa:$('dIpa').value.trim(), pron_split:$('dSp').value.trim()});
+    if (def && words.get(dw) && words.get(dw).fail) { delete words.get(dw).fail; await dbPut(words.get(dw)); renderFail(); }
     if (curWord === dw) showNow(words.get(dw));
     closeDetail();
   };
@@ -956,6 +1153,19 @@ function bind() {
     if (playing) stopPlay();
     unlockTTS();
     playWord({word:'example', example:'This is how your review will sound.', pron_split:'e - x - a - m - p - l - e'}, ++playToken);
+  };
+  $('mwKey').value = S.mwKey || '';
+  $('mwType').value = S.mwType || 'learners';
+  $('mwSave').onclick = async () => {
+    S.mwKey = $('mwKey').value.trim(); S.mwType = $('mwType').value; saveS();
+    if (!S.mwKey) { $('mwInfo').textContent = '已清除 key，不使用韦氏词典'; return; }
+    $('mwInfo').textContent = '测试中…';
+    try {
+      const r = await fromMW('safety', 10000);
+      $('mwInfo').textContent = r ? `✅ 可以使用：safety ${r.ipa} ${r.definition}` : '⚠️ 连上了，但没查到 safety，请确认选的词典和 key 对应';
+    } catch (e) {
+      $('mwInfo').textContent = e.message === 'mwkey' ? `❌ key 不对或没订阅这个词典：${e.detail || ''}` : '❌ 连不上韦氏服务器（可能网络问题，或不允许网页直接调用），请截图发给 Claude';
+    }
   };
   $('resetRound').onclick = () => { S.round = 1; saveS(); updateRoundUI(); };
   $('exportBtn').onclick = exportBackup;
@@ -980,6 +1190,7 @@ async function init() {
     await openDB();
     (await dbAll('words')).forEach(w => words.set(w.word, w));
     (await dbAll('lists')).forEach(l => lists.set(l.id, l));
+    loadLocalDict();
     if (!S.migrated) { // 旧版本「勾选」的单词转成一个播放列表
       const ck = [...words.values()].filter(w => w.checked).sort(byOld).map(w => w.word);
       if (ck.length && !lists.size) { const l = await createList('默认列表'); await addToList(l.id, ck); S.playList = l.id; }
@@ -988,7 +1199,7 @@ async function init() {
   } catch (e) {
     setP('无法打开本地数据库（可能处于无痕模式），单词不会被保存');
   }
-  renderLists(); renderList(); checkBackup();
+  renderLists(); renderList(); renderFail(); checkBackup();
 }
 init();
 })();
