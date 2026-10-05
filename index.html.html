@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="单词复习">
+<title>单词美音复习</title>
+<style>
+:root{--bg:#f5f4f0;--card:#fff;--ink:#1c1c1e;--muted:#6e6e73;--line:#e2e0da;--soft:#efede8;--accent:#2457d6;--on-accent:#fff;--danger:#c53030;--l0:#d64040;--l1:#e0862a;--l2:#b89a12;--l3:#2f8f55;--hl:#eef3ff}
+@media (prefers-color-scheme:dark){:root{--bg:#121214;--card:#1d1d21;--ink:#ececf1;--muted:#9b9ba4;--line:#2f2f36;--soft:#26262c;--accent:#6f8fff;--on-accent:#0b0b0e;--danger:#ff6b6b;--l0:#e65555;--l1:#e08a35;--l2:#c9a92a;--l3:#3fa868;--hl:#1e2640}}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Segoe UI","Microsoft YaHei",sans-serif}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(12px + env(safe-area-inset-top)) 16px 10px;max-width:640px;margin:0 auto}
+.top h1{font-size:20px;margin:0}
+.tag{font-size:13px;color:var(--muted);background:var(--soft);padding:4px 10px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+.warn,.bkbar{max-width:608px;margin:0 auto 10px;padding:10px 12px;border-radius:12px;font-size:14px}
+.warn{background:#fff4e0;color:#7a4b00}
+.bkbar{padding:12px;border-radius:14px;background:#e8efff;color:#1d3a8a;border:1px solid #c9d7ff}
+.bkbar .inline{margin-top:8px}
+@media (max-width:640px){.warn,.bkbar{margin:0 16px 10px}}
+@media (prefers-color-scheme:dark){.warn{background:#3a2c10;color:#ffd58a}.bkbar{background:#1b2440;color:#c8d6ff;border-color:#2c3a66}}
+main{max-width:640px;margin:0 auto;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+.page{display:flex;flex-direction:column;gap:12px}
+.page[hidden]{display:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.tabbar button{appearance:none;-webkit-appearance:none;border:none;background:none;color:var(--muted);font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;min-height:50px;cursor:pointer;border-radius:10px}
+.tabbar button span{font-size:22px;line-height:1;filter:grayscale(1);opacity:.6}
+.tabbar button.on{color:var(--accent);font-weight:600}
+.tabbar button.on span{filter:none;opacity:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+h2{font-size:16px;margin:0 0 10px}
+summary{font-weight:600;cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'▾';float:right;color:var(--muted)}
+details[open] summary{margin-bottom:6px}
+.btn{appearance:none;-webkit-appearance:none;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:12px;padding:10px 14px;font:inherit;font-size:15px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.stop{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
+.btn.danger{color:var(--danger)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.small{min-height:36px;padding:6px 12px;font-size:14px}
+.btn.big{flex:1;min-height:52px;font-size:17px}
+.btn.wide{width:100%;margin-top:8px}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+input[type=text],input[type=search],textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-height:44px}
+.inline input,.inline select{flex:1;min-width:0;width:auto}
+textarea{resize:vertical;margin-top:8px;display:block}
+.rowsel{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px}
+.rowsel>span{flex:none;color:var(--muted)}
+.rowsel select{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.vh{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.pstatus{font-size:14px;color:var(--muted)}
+.now{padding:12px 2px 6px;min-height:110px}
+.now.empty .now-word{color:var(--muted)}
+.now-word{font-size:34px;font-weight:700;word-break:break-word;line-height:1.2}
+.now-ipa{color:var(--muted);font-size:17px;margin-top:2px}
+.now-def{margin-top:8px;cursor:pointer;transition:filter .2s}
+.now-def.blur{filter:blur(6px);-webkit-user-select:none;user-select:none}
+.now-ex{margin-top:6px;font-style:italic;color:var(--muted)}
+.pctl{display:flex;gap:8px;margin-top:10px}
+.lvrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.lv{font:inherit;font-size:13px;min-height:40px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;padding:4px}
+.lv.on{color:#fff;font-weight:600}
+.lv.on.l0{background:var(--l0);border-color:var(--l0)}
+.lv.on.l1{background:var(--l1);border-color:var(--l1)}
+.lv.on.l2{background:var(--l2);border-color:var(--l2)}
+.lv.on.l3{background:var(--l3);border-color:var(--l3)}
+.switch{display:flex;align-items:center;gap:8px;font-size:15px;margin-top:10px}
+.switch input{width:22px;height:22px;accent-color:var(--accent);margin:0}
+#list{list-style:none;margin:10px 0 0;padding:0}
+#list li{display:flex;align-items:center;gap:10px;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;border-radius:10px}
+#list li.playing{background:var(--hl)}
+#list li.playing b::before{content:'▶ ';color:var(--accent);font-size:13px}
+#list .ck{width:24px;height:24px;flex:none;accent-color:var(--accent);margin:0}
+.wmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.wdef{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:12px;padding:3px 8px;border-radius:999px;white-space:nowrap;color:#fff;flex:none}
+.chip.l0{background:var(--l0)}.chip.l1{background:var(--l1)}.chip.l2{background:var(--l2)}.chip.l3{background:var(--l3)}
+#list li.emptyli{justify-content:center;text-align:center;color:var(--muted);cursor:default;padding:24px 4px;font-size:14px}
+.selbar{background:var(--hl);border-radius:12px;padding:8px;margin-top:8px}
+.selbar .inline{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fchip{border:1px dashed var(--danger);color:var(--danger);background:transparent;border-radius:999px;padding:4px 10px;font:inherit;font-size:14px;cursor:pointer}
+.lchip{border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;min-height:36px}
+.lchip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.failhead{display:flex;align-items:center;gap:8px;margin-top:12px;font-weight:600}
+.failhead span{flex:1}
+.rg{display:grid;grid-template-columns:6.5em 1fr 3.2em;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.rg input{width:100%;accent-color:var(--accent)}
+.rg output{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.sub{font-size:14px;font-weight:600;margin:16px 0 4px}
+.tips{font-size:13px;color:var(--muted);padding-left:18px;margin:6px 0 0}
+dialog{border:none;border-radius:18px;padding:16px;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 40px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dhead h3{margin:0;font-size:26px;word-break:break-word}
+#dClose{outline:none;width:44px;padding:0;font-size:18px}
+label.f{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+label.f textarea,label.f input{margin-top:4px}
+.help details{border-top:1px solid var(--line);padding:10px 0}
+.help details:first-of-type{border-top:none;padding-top:0}
+.help summary{font-weight:600;font-size:15px}
+.help ol{margin:8px 0 0;padding-left:20px;font-size:14px}
+.help li{margin:4px 0}
+.help p{font-size:13px;color:var(--muted);margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:calc(100vw - 32px);text-align:center}
+#dark{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
+#dark[hidden]{display:none}
+#darkWord{color:#2a2a2e;font-size:30px;font-weight:700;padding:0 24px;text-align:center;word-break:break-word}
+#darkInfo{color:#232327;font-size:14px;margin-top:10px}
+#darkHint{position:absolute;bottom:calc(30px + env(safe-area-inset-bottom));color:#1f1f23;font-size:13px}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>单词美音复习</h1>
+  <span id="voiceTag" class="tag">语音加载中…</span>
+</header>
+<div id="voiceWarn" class="warn" hidden>没找到美式英语语音。iPhone：设置 → 辅助功能 → 朗读内容 → 声音 → 英语 → 下载 Alex 或 Samantha，然后刷新本页。</div>
+<div id="bkBar" class="bkbar" hidden>
+  <div id="bkMsg"></div>
+  <div class="inline">
+    <button class="btn small primary" id="bkNow">立即备份</button>
+    <button class="btn small ghost" id="bkLater">3 天后再提醒</button>
+  </div>
+</div>
+
+<main>
+  <section class="page" data-page="home">
+    <div class="card">
+      <div class="pstatus" id="pStatus">选好播放列表后点「开始复习」</div>
+      <div id="now" class="now empty">
+        <div class="now-word" id="nowWord">—</div>
+        <div class="now-ipa" id="nowIpa"></div>
+        <div class="now-def" id="nowDef"></div>
+        <div class="now-ex" id="nowEx"></div>
+        <div class="lvrow" id="nowLv"></div>
+      </div>
+      <label class="rowsel"><span>播放列表</span><select id="playSel"></select></label>
+      <div class="pctl">
+        <button class="btn primary big" id="playBtn">▶ 开始复习</button>
+        <button class="btn big" id="skipBtn" disabled>⏭ 下一个</button>
+      </div>
+      <button class="btn wide" id="darkBtn">🌙 熄屏听（屏幕全黑，省电）</button>
+      <label class="switch"><input type="checkbox" id="hideDef"> 隐藏释义（点按显示，先听后看）</label>
+    </div>
+  </section>
+  <section class="page" data-page="lib" hidden>
+    <div class="card">
+      <h2>添加单词</h2>
+      <div class="inline">
+        <input type="search" id="lookupIn" placeholder="输入单词，查询或添加" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+        <button class="btn primary" id="lookupBtn">查询</button>
+      </div>
+      <textarea id="pasteIn" rows="3" placeholder="或粘贴多个单词（每行一个，逗号分隔也可）" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+      <label class="rowsel"><span>同时加入</span><select id="impTo"></select></label>
+      <div class="inline">
+        <button class="btn" id="pasteBtn">导入粘贴内容</button>
+        <span class="btn">选择 txt 文件<input type="file" id="txtFile" accept=".txt,text/plain" class="vh"></span>
+      </div>
+      <div id="impStatus" class="muted small" style="margin-top:8px"></div>
+      <div id="failBox" hidden>
+        <div class="failhead"><span>抓取失败</span><button class="btn small" id="retryAll">全部重试</button><button class="btn small ghost" id="clearFail">清空</button></div>
+        <div id="failList" class="chips"></div>
+        <div class="muted small" style="margin-top:6px">点单词可手动添加，再自己填释义和例句</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>单词库 <span id="count" class="muted small"></span></h2>
+      <div class="inline">
+        <select id="viewSel" aria-label="查看列表"></select>
+        <button class="btn small" id="newListBtn">＋ 新建列表</button>
+      </div>
+      <div class="inline" id="listOps" hidden>
+        <button class="btn small" id="renameList">重命名列表</button>
+        <button class="btn small danger" id="deleteList">删除列表</button>
+      </div>
+      <div class="inline">
+        <input type="search" id="search" placeholder="搜索单词或释义" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <select id="filter" style="flex:0 0 auto;width:auto">
+          <option value="all">全部等级</option>
+          <option value="0">很陌生</option>
+          <option value="1">陌生</option>
+          <option value="2">有点陌生</option>
+          <option value="3">有点印象</option>
+        </select>
+      </div>
+      <div class="inline">
+        <button class="btn small" id="selAll">全选</button>
+        <button class="btn small" id="selNone">清空选择</button>
+        <span class="muted small" id="selCount"></span>
+      </div>
+      <div class="selbar" id="selActions" hidden>
+        <div class="inline">
+          <select id="addTo" aria-label="加入列表"></select>
+          <button class="btn small" id="rmFromList">移出本列表</button>
+          <button class="btn small danger" id="delSel">删除单词</button>
+        </div>
+      </div>
+      <ul id="list"></ul>
+    </div>
+  </section>
+  <section class="page" data-page="set" hidden>
+    <div class="card" id="settings">
+      <h2>设置与备份</h2>
+      <div class="sub" style="margin-top:0">语音</div>
+      <select id="voiceSel"></select>
+      <div class="sub">语速与停顿</div>
+      <div id="ranges"></div>
+      <div class="inline"><button class="btn small" id="testBtn">🔊 试听</button></div>
+      <div class="sub">复习轮次</div>
+      <div class="inline"><span id="roundTxt" class="muted"></span><button class="btn small" id="resetRound">重置为第 1 轮</button></div>
+      <div class="muted small">很陌生/陌生：每轮都读；有点陌生：偶数轮；有点印象：每 3 轮一次</div>
+      <div class="sub">备份</div>
+      <div class="muted small" id="bkLast"></div>
+      <div class="inline">
+        <button class="btn small" id="exportBtn">导出单词库</button>
+        <span class="btn small">导入备份<input type="file" id="backupFile" accept=".json,application/json" class="vh"></span>
+      </div>
+      <label class="rg" style="grid-template-columns:6.5em 1fr"><span>备份提醒</span>
+        <select id="bkDays"><option value="3">超过 3 天提醒</option><option value="7">超过 7 天提醒</option><option value="14">超过 14 天提醒</option><option value="0">不提醒</option></select>
+      </label>
+      <ul class="tips">
+        <li>单词库和播放列表都存在当前浏览器里，清除网站数据会丢失，记得定期导出。</li>
+        <li>iPhone「添加到主屏幕」后的版本和 Safari 里的数据不互通，选一个固定使用。</li>
+        <li>按电源键锁屏后 iPhone 会停止朗读。想不看屏幕听，请用「熄屏听」。</li>
+      </ul>
+    </div>
+  </section>
+  <section class="page" data-page="help" hidden>
+    <div class="card help">
+      <h2>使用教程</h2>
+      <details>
+        <summary>① 播放列表怎么用</summary>
+        <ol>
+          <li>在「单词库」页点「＋ 新建列表」，起个名字，比如「展会英语」。</li>
+          <li>切到「全部单词」，勾选要加的单词 → 点「加入列表…」→ 选这个列表。</li>
+          <li>导入新单词时，在「同时加入」里选好列表，导入的单词会自动放进去。</li>
+          <li>要删减：在单词库上方切到这个列表，勾选单词 → 点「移出本列表」。单词仍保留在单词库里。</li>
+          <li>复习时，在「复习」页的「播放列表」里选它，就只播放这个列表里的单词。</li>
+        </ol>
+        <p>点开任意单词，在「所属播放列表」里也能直接加入或移出。</p>
+      </details>
+      <details>
+        <summary>② 导出备份（iPhone）</summary>
+        <ol>
+          <li>点顶部提示条的「立即备份」，或打开底部「设置」页 →「导出单词库」。</li>
+          <li>弹出分享面板后，选「存储到文件」→「iCloud 云盘」，建议新建一个「单词备份」文件夹，点「存储」。</li>
+          <li>也可以在分享面板里选微信 →「文件传输助手」，在微信里留一份。</li>
+          <li>文件名带日期，例如「单词库备份_20261005.json」，保留最近几份就够了。</li>
+        </ol>
+        <p>备份包含全部单词、熟悉度和播放列表。电脑上点「导出单词库」，文件会下载到「下载」文件夹。</p>
+      </details>
+      <details>
+        <summary>③ 恢复备份</summary>
+        <ol>
+          <li>打开底部「设置」页 →「导入备份」。</li>
+          <li>在文件选择里找到之前存的 .json 文件（iCloud 云盘 →「单词备份」）。</li>
+          <li>备份在微信里的话，先在微信打开文件 → 右上角「…」→「用其他应用打开」→「存储到文件」，再按上一步选择。</li>
+          <li>看到「已恢复 N 个单词」就完成了。同名单词以备份为准，库里其他单词保留不动。</li>
+        </ol>
+      </details>
+      <details>
+        <summary>④ 换手机 / 换浏览器迁移</summary>
+        <ol>
+          <li>在旧设备上导出一份最新备份。</li>
+          <li>在新设备上打开同一个网址。</li>
+          <li>「设置」页 →「导入备份」，选那份文件即可，熟悉度和播放列表都会保留。</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-go="home" class="on"><span>🎧</span>复习</button>
+  <button data-go="lib"><span>📚</span>单词库</button>
+  <button data-go="set"><span>⚙️</span>设置</button>
+  <button data-go="help"><span>📖</span>教程</button>
+</nav>
+
+<dialog id="dlg">
+  <div class="dhead"><h3 id="dWord"></h3><button class="btn ghost" id="dClose" aria-label="关闭">✕</button></div>
+  <div class="muted" id="dIpaView"></div>
+  <div class="inline"><button class="btn small" id="dSpeak">🔊 朗读一遍</button></div>
+  <div class="lvrow" id="dLv"></div>
+  <div class="sub" style="margin-top:14px">所属播放列表</div>
+  <div class="chips" id="dLists"></div>
+  <label class="f">释义<textarea id="dDef" rows="3"></textarea></label>
+  <label class="f">例句<textarea id="dEx" rows="3" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea></label>
+  <label class="f">美式音标（仅显示）<input type="text" id="dIpa" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <label class="f">发音拆解（朗读用，例：c - a - t）<input type="text" id="dSp" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <div class="inline" style="margin-top:14px">
+    <button class="btn primary" id="dSave">保存修改</button>
+    <button class="btn danger" id="dDel">删除单词</button>
+  </div>
+</dialog>
+
+<div id="dark" hidden>
+  <div id="darkWord"></div>
+  <div id="darkInfo"></div>
+  <div id="darkHint">熄屏听 · 轻点两下退出</div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const LV = ['很陌生', '陌生', '有点陌生', '有点印象'];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+const DAY = 864e5;
+let toastT;
+function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
+
+/* ---------- 设置 ---------- */
+const DEF = {rateWord:.95, rateEx:.85, rateSp:.8, pWord:1.2, pEx:1.2, pSp:1.5, voice:'', hideDef:false, round:1,
+             lastBackup:0, bkDays:7, snoozeUntil:0, view:'', playList:'', impTo:'', migrated:false};
+let S = {...DEF};
+try { S = {...DEF, ...JSON.parse(localStorage.getItem('srs_settings') || '{}')}; } catch (e) {}
+const saveS = () => { try { localStorage.setItem('srs_settings', JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- IndexedDB ---------- */
+let db;
+const words = new Map(), lists = new Map(), sel = new Set();
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('srs_words_db', 2);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains('words')) d.createObjectStore('words', {keyPath:'word'});
+      if (!d.objectStoreNames.contains('lists')) d.createObjectStore('lists', {keyPath:'id'});
+    };
+    r.onsuccess = () => { db = r.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+const wrap = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const store = (name, mode) => db.transaction(name, mode).objectStore(name);
+const dbPut = (o, name = 'words') => wrap(store(name, 'readwrite').put(o));
+const dbDel = (k, name = 'words') => wrap(store(name, 'readwrite').delete(k));
+const dbAll = (name = 'words') => wrap(store(name, 'readonly').getAll());
+function dbPutMany(arr, name = 'words') {
+  return new Promise((res, rej) => {
+    if (!arr.length) { res(); return; }
+    const t = db.transaction(name, 'readwrite'), s = t.objectStore(name);
+    arr.forEach(o => s.put(o));
+    t.oncomplete = res; t.onerror = () => rej(t.error);
+  });
+}
+
+/* ---------- 单词记录 ---------- */
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z' \-]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^[-']+|[-']+$/g, '');
+const splitLetters = w => [...w].filter(c => /[a-z]/.test(c)).join(' - ');
+let seq = 0;
+function newRecord(w, o = {}) {
+  return {word:w, definition:o.definition || '', example:o.example || '', ipa:o.ipa || '',
+          pron_split: o.pron_split ?? splitLetters(w), level:0, created_at: Date.now() * 100 + (seq++ % 100)};
+}
+const byOld = (a, b) => a.created_at - b.created_at;
+
+/* ---------- 播放列表 ---------- */
+const sortedLists = () => [...lists.values()].sort(byOld);
+const listSize = l => l.words.filter(w => words.has(w)).length;
+const saveList = l => dbPut(l, 'lists');
+async function createList(name) {
+  name = String(name || '').trim().slice(0, 40);
+  if (!name) return null;
+  const l = {id:'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, words:[], created_at:Date.now()};
+  lists.set(l.id, l);
+  await saveList(l);
+  renderLists();
+  return l;
+}
+function askNewList() { const n = prompt('新播放列表的名字：', ''); return n && n.trim() ? createList(n) : Promise.resolve(null); }
+async function addToList(id, arr) {
+  const l = lists.get(id);
+  if (!l) return 0;
+  const have = new Set(l.words);
+  let n = 0;
+  arr.forEach(w => { if (words.has(w) && !have.has(w)) { have.add(w); l.words.push(w); n++; } });
+  if (n) await saveList(l);
+  renderLists(); renderList();
+  return n;
+}
+async function removeFromList(id, arr) {
+  const l = lists.get(id);
+  if (!l) return 0;
+  const rm = new Set(arr), before = l.words.length;
+  l.words = l.words.filter(w => !rm.has(w));
+  const n = before - l.words.length;
+  if (n) await saveList(l);
+  renderLists(); renderList();
+  return n;
+}
+function renderLists() {
+  if (S.view && !lists.has(S.view)) S.view = '';
+  if (S.playList && !lists.has(S.playList)) S.playList = '';
+  if (S.impTo && !lists.has(S.impTo)) S.impTo = '';
+  saveS();
+  const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  const ls = sortedLists();
+  const all = opt('', `全部单词（${words.size}）`);
+  const lo = ls.map(l => opt(l.id, `${l.name}（${listSize(l)}）`)).join('');
+  $('viewSel').innerHTML = all + lo; $('viewSel').value = S.view;
+  $('playSel').innerHTML = all + lo; $('playSel').value = S.playList;
+  $('impTo').innerHTML = opt('', '不加入列表') + lo + opt('__new', '＋ 新建列表…'); $('impTo').value = S.impTo;
+  $('addTo').innerHTML = '<option value="" disabled>加入列表…</option>' + lo + opt('__new', '＋ 新建列表…'); $('addTo').value = '';
+  $('listOps').hidden = !S.view;
+  if ($('dlg').open) renderDLists();
+}
+
+/* ---------- 词典抓取 ---------- */
+function parseEntry(w, data) {
+  let ipa = '', def = '', pos = '', ex = '';
+  for (const e of data) {
+    const p = (e.phonetics || []).find(p => p.text && p.audio && /-us\.mp3$/i.test(p.audio));
+    if (p) { ipa = p.text; break; }
+  }
+  if (!ipa) for (const e of data) {
+    const p = (e.phonetics || []).find(p => p.text);
+    if (p) { ipa = p.text; break; }
+    if (e.phonetic) { ipa = e.phonetic; break; }
+  }
+  for (const e of data) for (const m of (e.meanings || [])) for (const d of (m.definitions || [])) {
+    if (!def && d.definition) { def = d.definition; pos = m.partOfSpeech || ''; }
+    if (!ex && d.example) ex = d.example;
+  }
+  return newRecord(w, {definition: (pos ? `(${pos}) ` : '') + def, example: ex, ipa});
+}
+async function fetchWord(w) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(w), {signal: ctl.signal});
+      clearTimeout(t);
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return parseEntry(w, await r.json());
+    } catch (e) {
+      if (attempt === 1) throw e;
+      await sleep(900);
+    }
+  }
+}
+
+/* ---------- 导入 ---------- */
+let importing = false;
+const failed = new Map();
+const impStatus = t => { $('impStatus').textContent = t; };
+function setImpBusy(b) { ['pasteBtn','lookupBtn','retryAll'].forEach(id => $(id).disabled = b); $('txtFile').disabled = b; }
+const tokenize = text => String(text).split(/[\r\n,;，；、\t]+/).map(norm).filter(w => /[a-z]/.test(w));
+async function addToImpTarget(arr) {
+  if (!S.impTo || !lists.has(S.impTo)) return '';
+  const n = await addToList(S.impTo, arr);
+  return n ? `，${n} 个加入「${lists.get(S.impTo).name}」` : '';
+}
+
+async function importList(raw) {
+  if (importing) { impStatus('正在导入，请稍候…'); return; }
+  const all = [...new Set(raw)];
+  const skipped = all.filter(w => words.has(w)).length;
+  let list = all.filter(w => !words.has(w));
+  if (!list.length) {
+    const extra = await addToImpTarget(all);
+    impStatus(skipped ? `${skipped} 个单词已在库中，无需抓取${extra}` : '没有可导入的单词');
+    return;
+  }
+  let note = '';
+  if (list.length > 500) { note = '（单次上限 500，已取前 500 个）'; list = list.slice(0, 500); }
+  importing = true; setImpBusy(true);
+  let ok = 0;
+  for (let i = 0; i < list.length; i++) {
+    const w = list[i];
+    impStatus(`抓取中 ${i + 1}/${list.length}：${w} ${note}`);
+    try {
+      const rec = await fetchWord(w);
+      if (rec) { await dbPut(rec); words.set(w, rec); failed.delete(w); ok++; }
+      else failed.set(w, '词典未收录');
+    } catch (e) { failed.set(w, '网络错误'); }
+    if (i % 5 === 4 || i === list.length - 1) { renderList(); renderLists(); }
+    renderFail();
+    if (i < list.length - 1) await sleep(250);
+  }
+  importing = false; setImpBusy(false);
+  const extra = await addToImpTarget(all);
+  const bad = list.length - ok;
+  impStatus(`完成：新增 ${ok} 个${skipped ? `，跳过已有 ${skipped} 个` : ''}${bad ? `，失败 ${bad} 个` : ''}${extra}`);
+  checkBackup();
+}
+
+function renderFail() {
+  $('failBox').hidden = !failed.size;
+  $('failList').innerHTML = [...failed].map(([w, why]) => `<button class="fchip" data-w="${esc(w)}" title="${esc(why)}">${esc(w)}</button>`).join('');
+}
+
+async function lookup() {
+  const w = norm($('lookupIn').value);
+  if (!w) return;
+  if (words.has(w)) { await addToImpTarget([w]); openDetail(w); $('lookupIn').value = ''; return; }
+  if (importing) { impStatus('正在批量导入，请稍候再查'); return; }
+  setImpBusy(true); impStatus(`查询 ${w}…`);
+  try {
+    const rec = await fetchWord(w);
+    if (rec) {
+      await dbPut(rec); words.set(w, rec); failed.delete(w);
+      const extra = await addToImpTarget([w]);
+      renderList(); renderLists(); renderFail(); impStatus(`已添加 ${w}${extra}`); $('lookupIn').value = ''; openDetail(w);
+    } else { failed.set(w, '词典未收录'); renderFail(); impStatus(`词典没有收录「${w}」，可在下方失败列表点它手动添加`); }
+  } catch (e) { failed.set(w, '网络错误'); renderFail(); impStatus('网络错误，请检查网络后重试'); }
+  finally { setImpBusy(false); }
+}
+
+/* ---------- 单词库列表 ---------- */
+let visible = [];
+function renderList() {
+  const q = $('search').value.trim().toLowerCase(), f = $('filter').value;
+  const inList = S.view && lists.has(S.view);
+  const base = inList ? lists.get(S.view).words.map(w => words.get(w)).filter(Boolean)
+                      : [...words.values()].sort((a, b) => b.created_at - a.created_at);
+  visible = base.filter(w => (!q || w.word.includes(q) || (w.definition || '').toLowerCase().includes(q)) &&
+                             (f === 'all' || String(w.level) === f));
+  for (const w of [...sel]) if (!words.has(w)) sel.delete(w);
+  $('count').textContent = inList ? `本列表 ${base.length} 个 · 库中共 ${words.size} 个` : `共 ${words.size} 个`;
+  $('selCount').textContent = sel.size ? `已选 ${sel.size} 个` : '勾选单词后可加入列表';
+  $('selActions').hidden = !sel.size;
+  $('rmFromList').hidden = !inList;
+  let empty = '还没有单词，先添加一些吧';
+  if (words.size && inList && !base.length) empty = '这个列表还没有单词。<br>切到「全部单词」，勾选单词 → 加入列表。';
+  else if (words.size) empty = '没有匹配的单词';
+  $('list').innerHTML = visible.length
+    ? visible.map(w => `<li data-w="${esc(w.word)}"><input type="checkbox" class="ck" ${sel.has(w.word) ? 'checked' : ''} aria-label="选择 ${esc(w.word)}"><div class="wmain"><b>${esc(w.word)}</b><span class="wdef">${esc(w.definition || '（无释义）')}</span></div><span class="chip l${w.level}">${LV[w.level]}</span></li>`).join('')
+    : `<li class="emptyli">${empty}</li>`;
+  markPlaying();
+}
+function markPlaying() {
+  $('list').querySelectorAll('li.playing').forEach(li => li.classList.remove('playing'));
+  if (playing && curWord) {
+    const li = $('list').querySelector(`li[data-w="${CSS.escape(curWord)}"]`);
+    if (li) li.classList.add('playing');
+  }
+}
+async function update(word, patch) {
+  const w = words.get(word);
+  if (!w) return;
+  Object.assign(w, patch);
+  await dbPut(w);
+  renderList();
+}
+async function deleteWords(arr) {
+  for (const w of arr) { await dbDel(w); words.delete(w); sel.delete(w); }
+  for (const l of lists.values()) {
+    const b = l.words.length;
+    l.words = l.words.filter(w => words.has(w));
+    if (l.words.length !== b) await saveList(l);
+  }
+  renderLists(); renderList(); checkBackup();
+}
+function renderLv(box, word) {
+  const w = words.get(word);
+  if (!w) { box.innerHTML = ''; return; }
+  box.innerHTML = LV.map((n, i) => `<button type="button" class="lv l${i}${w.level === i ? ' on' : ''}" data-lv="${i}">${n}</button>`).join('');
+  box.onclick = async e => {
+    const b = e.target.closest('[data-lv]');
+    if (!b) return;
+    await update(word, {level: +b.dataset.lv});
+    renderLv(box, word);
+    if (box !== $('nowLv') && curWord === word) renderLv($('nowLv'), word);
+  };
+}
+
+/* ---------- 详情 ---------- */
+let dw = null;
+function renderDLists() {
+  const ls = sortedLists(), box = $('dLists');
+  if (!ls.length) { box.innerHTML = '<span class="muted small">还没有播放列表，可在单词库点「＋ 新建列表」</span>'; return; }
+  box.innerHTML = ls.map(l => { const on = l.words.includes(dw); return `<button type="button" class="lchip${on ? ' on' : ''}" data-id="${esc(l.id)}">${on ? '✓ ' : '+ '}${esc(l.name)}</button>`; }).join('');
+}
+function openDetail(word) {
+  const w = words.get(word);
+  if (!w) return;
+  dw = word;
+  $('dWord').textContent = w.word;
+  $('dIpaView').textContent = w.ipa || '';
+  $('dDef').value = w.definition || '';
+  $('dEx').value = w.example || '';
+  $('dIpa').value = w.ipa || '';
+  $('dSp').value = w.pron_split || '';
+  renderLv($('dLv'), word);
+  renderDLists();
+  if (typeof $('dlg').showModal === 'function') $('dlg').showModal(); else $('dlg').setAttribute('open', '');
+}
+const closeDetail = () => { if ($('dlg').close) $('dlg').close(); else $('dlg').removeAttribute('open'); };
+
+/* ---------- 语音 ---------- */
+let voices = [], voice = null, voiceChecked = false;
+function pickVoice() {
+  if (S.voice) { const v = voices.find(v => v.voiceURI === S.voice); if (v) return v; }
+  return voices.find(v => /^alex\b/i.test(v.name)) || voices.find(v => /^samantha\b/i.test(v.name)) ||
+         voices.find(v => v.localService) || voices[0] || null;
+}
+function loadVoices() {
+  if (!hasTTS) { $('voiceTag').textContent = '浏览器不支持朗读'; return; }
+  const all = speechSynthesis.getVoices();
+  voices = all.filter(v => /^en[-_]us/i.test(v.lang));
+  voice = pickVoice();
+  const sel = $('voiceSel');
+  sel.innerHTML = '<option value="">自动（Alex → Samantha → 其他美音）</option>' +
+    voices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)}${v.localService ? '' : '（在线）'}</option>`).join('');
+  sel.value = voices.some(v => v.voiceURI === S.voice) ? S.voice : '';
+  $('voiceTag').textContent = voice ? `🔊 ${voice.name}` : (all.length || voiceChecked ? '无美式语音' : '语音加载中…');
+  $('voiceWarn').hidden = !!voice || !(all.length || voiceChecked);
+}
+
+const wakers = new Set();
+function wait(ms) {
+  return new Promise(r => {
+    const done = () => { clearTimeout(t); wakers.delete(done); r(); };
+    const t = setTimeout(done, ms);
+    wakers.add(done);
+  });
+}
+const interrupt = () => [...wakers].forEach(f => f());
+
+function speak(text, rate) {
+  return new Promise(res => {
+    if (!hasTTS || !text || !text.trim()) { res(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.lang = 'en-US';
+    u.rate = rate;
+    let done = false;
+    const fin = () => { if (done) return; done = true; clearTimeout(t); wakers.delete(fin); res(); };
+    const t = setTimeout(fin, Math.max(4000, text.length * 160 / rate) + 3000); // Safari 偶尔不触发 onend 的兜底
+    u.onend = fin; u.onerror = fin;
+    wakers.add(fin);
+    speechSynthesis.speak(u);
+  });
+}
+function unlockTTS() { // iOS 需要在点击事件里同步发起第一次朗读
+  if (!hasTTS) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+}
+
+/* ---------- 复习调度 ---------- */
+let playing = false, playToken = 0, skipNow = false, curWord = null, wakeLock = null, darkOn = false;
+const setP = t => { $('pStatus').textContent = t; if (darkOn) $('darkInfo').textContent = t; };
+const due = (level, r) => level <= 1 || (level === 2 && r % 2 === 0) || (level === 3 && r % 3 === 0);
+const updateRoundUI = () => { $('roundTxt').textContent = `下次从第 ${S.round} 轮开始`; };
+const playListObj = () => (S.playList && lists.get(S.playList)) || null;
+function playPool() {
+  const l = playListObj();
+  return l ? l.words.map(w => words.get(w)).filter(Boolean) : [...words.values()].sort(byOld);
+}
+const poolName = () => { const l = playListObj(); return l ? `「${l.name}」` : '全部单词'; };
+
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) {}
+}
+function updatePlayUI() {
+  $('playBtn').textContent = playing ? '⏹ 停止' : '▶ 开始复习';
+  $('playBtn').classList.toggle('stop', playing);
+  $('playBtn').classList.toggle('primary', !playing);
+  $('skipBtn').disabled = !playing;
+  markPlaying();
+}
+function showNow(w) {
+  curWord = w.word;
+  $('now').classList.remove('empty');
+  $('nowWord').textContent = w.word;
+  $('nowIpa').textContent = w.ipa || '';
+  $('nowDef').textContent = w.definition || '';
+  $('nowDef').classList.toggle('blur', S.hideDef && !!w.definition);
+  $('nowEx').textContent = w.example || '';
+  $('darkWord').textContent = w.word;
+  renderLv($('nowLv'), w.word);
+  markPlaying();
+}
+async function playWord(w, tok) {
+  const ok = () => tok === playToken && !skipNow;
+  await speak(w.word, S.rateWord); if (!ok()) return;
+  await wait(S.pWord * 1000); if (!ok()) return;
+  if (w.example) { await speak(w.example, S.rateEx); if (!ok()) return; await wait(S.pEx * 1000); if (!ok()) return; }
+  if (w.pron_split) { await speak(w.pron_split, S.rateSp); if (!ok()) return; await wait(S.pSp * 1000); }
+}
+function startPlay() {
+  if (!hasTTS) { setP('这个浏览器不支持语音朗读'); return false; }
+  if (!playPool().length) { setP(playListObj() ? `播放列表${poolName()}还是空的，先到「单词库」页往里加单词` : '单词库还是空的，先到「单词库」页添加单词'); return false; }
+  unlockTTS();
+  playing = true;
+  const tok = ++playToken;
+  updatePlayUI(); keepAwake(true);
+  runLoop(tok);
+  return true;
+}
+async function runLoop(tok) {
+  let emptyRounds = 0;
+  while (tok === playToken) {
+    const pool = playPool();
+    if (!pool.length) { setP('播放列表已空，已停止'); break; }
+    const r = S.round, list = pool.filter(w => due(w.level, r));
+    if (!list.length) { S.round++; saveS(); updateRoundUI(); if (++emptyRounds > 6) break; continue; }
+    emptyRounds = 0;
+    for (let i = 0; i < list.length && tok === playToken; i++) {
+      const w = words.get(list[i].word);
+      const l = playListObj();
+      if (!w || (l && !l.words.includes(w.word))) continue;
+      setP(`${poolName()} · 第 ${r} 轮 · ${i + 1}/${list.length}`);
+      showNow(w);
+      skipNow = false;
+      await playWord(w, tok);
+    }
+    if (tok !== playToken) break;
+    S.round++; saveS(); updateRoundUI();
+    await wait(600);
+  }
+  if (tok === playToken) { playing = false; updatePlayUI(); if (!darkOn) keepAwake(false); }
+}
+function stopPlay(msg = '已停止') {
+  playing = false; playToken++; skipNow = false;
+  if (hasTTS) try { speechSynthesis.cancel(); } catch (e) {}
+  interrupt(); updatePlayUI(); if (!darkOn) keepAwake(false); setP(msg);
+}
+function skip() {
+  if (!playing) return;
+  skipNow = true;
+  try { speechSynthesis.cancel(); } catch (e) {}
+  interrupt();
+}
+
+/* ---------- 熄屏听 ---------- */
+let lastTap = 0;
+function enterDark() {
+  if (!playing && !startPlay()) { toast($('pStatus').textContent); return; }
+  darkOn = true;
+  $('darkWord').textContent = curWord || '';
+  $('darkInfo').textContent = $('pStatus').textContent;
+  $('dark').hidden = false;
+  keepAwake(true);
+}
+function exitDark() {
+  darkOn = false;
+  $('dark').hidden = true;
+  if (!playing) keepAwake(false);
+}
+
+/* ---------- 备份 ---------- */
+const fmtDate = t => { const d = new Date(t), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+function markBackedUp() { S.lastBackup = Date.now(); S.snoozeUntil = 0; saveS(); checkBackup(); }
+function exportBackup() {
+  if (!words.size) { alert('单词库是空的，没有可备份的内容'); return; }
+  const obj = {app:'srs-words', version:2, exported_at:new Date().toISOString(), round:S.round, words:[...words.values()], lists:sortedLists()};
+  const json = JSON.stringify(obj, null, 1);
+  const name = `单词库备份_${fmtDate(Date.now()).replace(/-/g, '')}.json`;
+  const download = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+    a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    markBackedUp();
+  };
+  let file = null;
+  try { file = new File([json], name, {type:'application/json'}); } catch (e) {}
+  const mobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /mac/i.test(navigator.userAgent));
+  if (file && mobile && navigator.canShare && navigator.canShare({files:[file]})) {
+    navigator.share({files:[file], title:name})
+      .then(markBackedUp)
+      .catch(e => { if (e && e.name !== 'AbortError') download(); });
+  } else download();
+}
+async function importBackup(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    const arr = Array.isArray(data) ? data : data.words;
+    if (!Array.isArray(arr)) throw new Error('格式不对');
+    const clean = arr.filter(o => o && o.word && norm(o.word)).map(o => {
+      const w = norm(o.word);
+      const lv = Math.min(3, Math.max(0, parseInt(o.level, 10) || 0));
+      return {...newRecord(w), ...o, word:w, level:lv};
+    });
+    await dbPutMany(clean);
+    clean.forEach(o => words.set(o.word, o));
+    let ln = 0;
+    if (!Array.isArray(data) && Array.isArray(data.lists)) {
+      const ls = data.lists.filter(l => l && l.id && l.name).map(l => ({id:String(l.id), name:String(l.name),
+        words:[...new Set((l.words || []).map(norm).filter(Boolean))], created_at:l.created_at || Date.now()}));
+      await dbPutMany(ls, 'lists');
+      ls.forEach(l => lists.set(l.id, l));
+      ln = ls.length;
+    } else {
+      const ck = clean.filter(o => o.checked).sort(byOld).map(o => o.word);
+      if (ck.length) { const l = await createList('备份恢复的列表'); await addToList(l.id, ck); ln = 1; }
+    }
+    if (!Array.isArray(data) && data.round > 0) { S.round = data.round; saveS(); updateRoundUI(); }
+    renderLists(); renderList(); checkBackup();
+    alert(`已恢复 ${clean.length} 个单词${ln ? `、${ln} 个播放列表` : ''}`);
+  } catch (e) { alert('导入失败：' + e.message); }
+}
+function checkBackup() {
+  const n = words.size, now = Date.now();
+  let msg = '';
+  if (n && S.bkDays > 0 && now >= S.snoozeUntil) {
+    if (!S.lastBackup) {
+      const oldest = Math.min(...[...words.values()].map(w => (w.created_at > 1e14 ? w.created_at / 100 : w.created_at) || now));
+      if (now - oldest > DAY || n >= 50) msg = `你的 ${n} 个单词还没有备份过。清除 Safari 网站数据会全部丢失，建议现在导出一份。`;
+    } else {
+      const d = Math.floor((now - S.lastBackup) / DAY);
+      if (d >= S.bkDays) msg = `距离上次备份已经 ${d} 天，单词库有 ${n} 个单词，建议导出一份新的备份。`;
+    }
+  }
+  $('bkBar').hidden = !msg;
+  $('bkMsg').textContent = '💾 ' + msg;
+  $('bkLast').textContent = S.lastBackup ? `上次备份：${fmtDate(S.lastBackup)}（${Math.floor((now - S.lastBackup) / DAY)} 天前）` : '还没有备份过';
+}
+
+/* ---------- 设置面板 ---------- */
+const RANGES = [['rateWord','单词语速',.5,1.5,.05,'×'],['rateEx','例句语速',.5,1.5,.05,'×'],['rateSp','拼读语速',.5,1.5,.05,'×'],
+                ['pWord','单词后停顿',0,5,.1,'s'],['pEx','例句后停顿',0,5,.1,'s'],['pSp','拼读后停顿',0,5,.1,'s']];
+function buildRanges() {
+  $('ranges').innerHTML = RANGES.map(([k, n, mi, ma, st]) =>
+    `<label class="rg"><span>${n}</span><input type="range" data-k="${k}" min="${mi}" max="${ma}" step="${st}" value="${S[k]}"><output id="o_${k}"></output></label>`).join('');
+  const show = k => { const r = RANGES.find(x => x[0] === k); $('o_' + k).textContent = Number(S[k]).toFixed(r[4] < .1 ? 2 : 1) + r[5]; };
+  RANGES.forEach(r => show(r[0]));
+  $('ranges').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; S[k] = parseFloat(e.target.value); show(k); saveS(); });
+}
+
+
+/* ---------- 分页 ---------- */
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => { p.hidden = p.dataset.page !== page; });
+  document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.go === page));
+  window.scrollTo(0, 0);
+  if (page === 'lib') markPlaying();
+}
+
+/* ---------- 事件 ---------- */
+function bind() {
+  $('tabbar').onclick = e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); };
+  $('playBtn').onclick = () => playing ? stopPlay() : startPlay();
+  $('skipBtn').onclick = skip;
+  $('darkBtn').onclick = enterDark;
+  $('dark').addEventListener('click', () => { const t = Date.now(); if (t - lastTap < 450) { exitDark(); lastTap = 0; } else lastTap = t; });
+  $('playSel').onchange = e => { S.playList = e.target.value; saveS(); if (playing) toast(`下一轮开始播放${poolName()}`); };
+  $('hideDef').checked = S.hideDef;
+  $('hideDef').onchange = e => { S.hideDef = e.target.checked; saveS(); $('nowDef').classList.toggle('blur', S.hideDef && !!$('nowDef').textContent); };
+  $('nowDef').onclick = () => $('nowDef').classList.remove('blur');
+
+  $('lookupBtn').onclick = lookup;
+  $('lookupIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(); } });
+  $('pasteBtn').onclick = async () => { const list = tokenize($('pasteIn').value); await importList(list); if (list.length) $('pasteIn').value = ''; };
+  $('txtFile').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await importList(tokenize(await f.text())); };
+  $('impTo').onchange = async e => {
+    if (e.target.value === '__new') { const l = await askNewList(); S.impTo = l ? l.id : ''; }
+    else S.impTo = e.target.value;
+    renderLists();
+  };
+  $('retryAll').onclick = () => importList([...failed.keys()]);
+  $('clearFail').onclick = () => { failed.clear(); renderFail(); };
+  $('failList').onclick = async e => {
+    const b = e.target.closest('[data-w]'); if (!b) return;
+    const w = b.dataset.w;
+    if (!words.has(w)) { const rec = newRecord(w); await dbPut(rec); words.set(w, rec); }
+    await addToImpTarget([w]);
+    failed.delete(w); renderFail(); renderList(); renderLists(); openDetail(w);
+  };
+
+  $('viewSel').onchange = e => { S.view = e.target.value; sel.clear(); renderLists(); renderList(); };
+  $('newListBtn').onclick = async () => {
+    const l = await askNewList();
+    if (l) { S.view = l.id; sel.clear(); renderLists(); renderList(); toast(`已新建「${l.name}」，切到「全部单词」勾选单词加进来`); }
+  };
+  $('renameList').onclick = async () => {
+    const l = lists.get(S.view); if (!l) return;
+    const n = prompt('列表新名字：', l.name);
+    if (n && n.trim()) { l.name = n.trim().slice(0, 40); await saveList(l); renderLists(); }
+  };
+  $('deleteList').onclick = async () => {
+    const l = lists.get(S.view); if (!l) return;
+    if (!confirm(`删除播放列表「${l.name}」？\n列表里的单词仍保留在单词库中。`)) return;
+    lists.delete(l.id); await dbDel(l.id, 'lists');
+    S.view = ''; renderLists(); renderList(); toast('列表已删除');
+  };
+  $('search').oninput = renderList;
+  $('filter').onchange = renderList;
+  $('selAll').onclick = () => { visible.forEach(w => sel.add(w.word)); renderList(); };
+  $('selNone').onclick = () => { sel.clear(); renderList(); };
+  $('addTo').onchange = async e => {
+    let id = e.target.value;
+    e.target.value = '';
+    if (id === '__new') { const l = await askNewList(); if (!l) { renderLists(); return; } id = l.id; }
+    const l = lists.get(id); if (!l) return;
+    const n = await addToList(id, [...sel]);
+    toast(n ? `已把 ${n} 个单词加入「${l.name}」` : `这些单词已经都在「${l.name}」里了`);
+    sel.clear(); renderList();
+  };
+  $('rmFromList').onclick = async () => {
+    const l = lists.get(S.view); if (!l) return;
+    const n = await removeFromList(l.id, [...sel]);
+    sel.clear(); renderList(); toast(`已从「${l.name}」移出 ${n} 个单词`);
+  };
+  $('delSel').onclick = async () => {
+    if (!confirm(`从单词库彻底删除选中的 ${sel.size} 个单词？\n所有播放列表里也会一起移除。`)) return;
+    const n = sel.size;
+    await deleteWords([...sel]); toast(`已删除 ${n} 个单词`);
+  };
+  $('list').addEventListener('click', e => {
+    const li = e.target.closest('li[data-w]'); if (!li) return;
+    if (e.target.classList.contains('ck')) {
+      if (e.target.checked) sel.add(li.dataset.w); else sel.delete(li.dataset.w);
+      $('selCount').textContent = sel.size ? `已选 ${sel.size} 个` : '勾选单词后可加入列表';
+      $('selActions').hidden = !sel.size;
+      return;
+    }
+    openDetail(li.dataset.w);
+  });
+
+  $('dClose').onclick = closeDetail;
+  $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) closeDetail(); });
+  $('dLists').onclick = async e => {
+    const b = e.target.closest('[data-id]'); if (!b) return;
+    const l = lists.get(b.dataset.id); if (!l) return;
+    if (l.words.includes(dw)) await removeFromList(l.id, [dw]); else await addToList(l.id, [dw]);
+    renderDLists();
+  };
+  $('dSave').onclick = async () => {
+    await update(dw, {definition:$('dDef').value.trim(), example:$('dEx').value.trim(), ipa:$('dIpa').value.trim(), pron_split:$('dSp').value.trim()});
+    if (curWord === dw) showNow(words.get(dw));
+    closeDetail();
+  };
+  $('dDel').onclick = async () => {
+    if (!confirm(`删除「${dw}」？所有播放列表里也会一起移除。`)) return;
+    await deleteWords([dw]); closeDetail();
+  };
+  $('dSpeak').onclick = () => {
+    const w = words.get(dw); if (!w) return;
+    if (playing) stopPlay();
+    unlockTTS();
+    playWord(w, ++playToken);
+  };
+
+  $('voiceSel').onchange = e => { S.voice = e.target.value; saveS(); voice = pickVoice(); $('voiceTag').textContent = voice ? `🔊 ${voice.name}` : '无美式语音'; };
+  $('testBtn').onclick = () => {
+    if (playing) stopPlay();
+    unlockTTS();
+    playWord({word:'example', example:'This is how your review will sound.', pron_split:'e - x - a - m - p - l - e'}, ++playToken);
+  };
+  $('resetRound').onclick = () => { S.round = 1; saveS(); updateRoundUI(); };
+  $('exportBtn').onclick = exportBackup;
+  $('bkNow').onclick = exportBackup;
+  $('bkLater').onclick = () => { S.snoozeUntil = Date.now() + 3 * DAY; saveS(); checkBackup(); };
+  $('bkDays').value = String(S.bkDays);
+  $('bkDays').onchange = e => { S.bkDays = +e.target.value; saveS(); checkBackup(); };
+  $('backupFile').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await importBackup(f); };
+
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (playing || darkOn)) keepAwake(true); });
+}
+
+/* ---------- 启动 ---------- */
+async function init() {
+  bind(); buildRanges(); updateRoundUI(); updatePlayUI();
+  if (hasTTS) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    [400, 1200, 3000].forEach((ms, i, a) => setTimeout(() => { if (i === a.length - 1) voiceChecked = true; loadVoices(); }, ms));
+  } else loadVoices();
+  try {
+    await openDB();
+    (await dbAll('words')).forEach(w => words.set(w.word, w));
+    (await dbAll('lists')).forEach(l => lists.set(l.id, l));
+    if (!S.migrated) { // 旧版本「勾选」的单词转成一个播放列表
+      const ck = [...words.values()].filter(w => w.checked).sort(byOld).map(w => w.word);
+      if (ck.length && !lists.size) { const l = await createList('默认列表'); await addToList(l.id, ck); S.playList = l.id; }
+      S.migrated = true; saveS();
+    }
+  } catch (e) {
+    setP('无法打开本地数据库（可能处于无痕模式），单词不会被保存');
+  }
+  renderLists(); renderList(); checkBackup();
+}
+init();
+})();
+</script>
+</body>
+</html>
