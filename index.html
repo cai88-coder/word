@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="单词复习">
 <title>单词美音复习</title>
 <style>
-:root{--bg:#f5f4f0;--card:#fff;--ink:#1c1c1e;--muted:#6e6e73;--line:#e2e0da;--soft:#efede8;--accent:#2457d6;--on-accent:#fff;--danger:#c53030;--l0:#d64040;--l1:#e0862a;--l2:#b89a12;--l3:#2f8f55;--hl:#eef3ff}
-@media (prefers-color-scheme:dark){:root{--bg:#121214;--card:#1d1d21;--ink:#ececf1;--muted:#9b9ba4;--line:#2f2f36;--soft:#26262c;--accent:#6f8fff;--on-accent:#0b0b0e;--danger:#ff6b6b;--l0:#e65555;--l1:#e08a35;--l2:#c9a92a;--l3:#3fa868;--hl:#1e2640}}
+:root{--bg:#f5f4f0;--card:#fff;--ink:#1c1c1e;--muted:#6e6e73;--line:#e2e0da;--soft:#efede8;--accent:#2457d6;--on-accent:#fff;--danger:#c53030;--l0:#d64040;--l1:#e0862a;--l2:#b89a12;--l3:#2f8f55;--l4:#5b6170;--hl:#eef3ff}
+@media (prefers-color-scheme:dark){:root{--bg:#121214;--card:#1d1d21;--ink:#ececf1;--muted:#9b9ba4;--line:#2f2f36;--soft:#26262c;--accent:#6f8fff;--on-accent:#0b0b0e;--danger:#ff6b6b;--l0:#e65555;--l1:#e08a35;--l2:#c9a92a;--l3:#3fa868;--l4:#7a8194;--hl:#1e2640}}
 [hidden]{display:none!important}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
@@ -61,16 +61,20 @@ textarea{resize:vertical;margin-top:8px;display:block}
 .now-word{font-size:34px;font-weight:700;word-break:break-word;line-height:1.2}
 .now-ipa{color:var(--muted);font-size:17px;margin-top:2px}
 .now-def{margin-top:8px;cursor:pointer;transition:filter .2s}
+.now-zh{margin-top:8px;font-size:18px;font-weight:600;cursor:pointer;transition:filter .2s}
+.now-zh:empty{display:none}
+.now-zh.blur{filter:blur(7px);-webkit-user-select:none;user-select:none}
 .now-def.blur{filter:blur(6px);-webkit-user-select:none;user-select:none}
 .now-ex{margin-top:6px;font-style:italic;color:var(--muted)}
 .pctl{display:flex;gap:8px;margin-top:10px}
-.lvrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.lv{font:inherit;font-size:13px;min-height:40px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;padding:4px}
+.lvrow{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px}
+.lv{font:inherit;font-size:12.5px;letter-spacing:-.3px;min-height:40px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;padding:4px}
 .lv.on{color:#fff;font-weight:600}
 .lv.on.l0{background:var(--l0);border-color:var(--l0)}
 .lv.on.l1{background:var(--l1);border-color:var(--l1)}
 .lv.on.l2{background:var(--l2);border-color:var(--l2)}
 .lv.on.l3{background:var(--l3);border-color:var(--l3)}
+.lv.on.l4{background:var(--l4);border-color:var(--l4)}
 .switch{display:flex;align-items:center;gap:8px;font-size:15px;margin-top:10px}
 .switch input{width:22px;height:22px;accent-color:var(--accent);margin:0}
 #list{list-style:none;margin:10px 0 0;padding:0}
@@ -81,7 +85,7 @@ textarea{resize:vertical;margin-top:8px;display:block}
 .wmain{flex:1;min-width:0;display:flex;flex-direction:column}
 .wdef{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{font-size:12px;padding:3px 8px;border-radius:999px;white-space:nowrap;color:#fff;flex:none}
-.chip.l0{background:var(--l0)}.chip.l1{background:var(--l1)}.chip.l2{background:var(--l2)}.chip.l3{background:var(--l3)}
+.chip.l0{background:var(--l0)}.chip.l1{background:var(--l1)}.chip.l2{background:var(--l2)}.chip.l3{background:var(--l3)}.chip.l4{background:var(--l4)}
 #list li.emptyli{justify-content:center;text-align:center;color:var(--muted);cursor:default;padding:24px 4px;font-size:14px}
 .selbar{background:var(--hl);border-radius:12px;padding:8px;margin-top:8px}
 .selbar .inline{margin-top:0}
@@ -138,6 +142,7 @@ label.f textarea,label.f input{margin-top:4px}
       <div id="now" class="now empty">
         <div class="now-word" id="nowWord">—</div>
         <div class="now-ipa" id="nowIpa"></div>
+        <div class="now-zh" id="nowZh"></div>
         <div class="now-def" id="nowDef"></div>
         <div class="now-ex" id="nowEx"></div>
         <div class="lvrow" id="nowLv"></div>
@@ -196,6 +201,7 @@ label.f textarea,label.f input{margin-top:4px}
           <option value="1">陌生</option>
           <option value="2">有点陌生</option>
           <option value="3">有点印象</option>
+          <option value="4">熟悉（不播放）</option>
         </select>
       </div>
       <div class="inline">
@@ -223,9 +229,10 @@ label.f textarea,label.f input{margin-top:4px}
       <div class="inline"><button class="btn small" id="testBtn">🔊 试听</button></div>
       <div class="sub">复习轮次</div>
       <div class="inline"><span id="roundTxt" class="muted"></span><button class="btn small" id="resetRound">重置为第 1 轮</button></div>
-      <div class="muted small">很陌生/陌生：每轮都读；有点陌生：偶数轮；有点印象：每 3 轮一次</div>
+      <div class="muted small">很陌生/陌生：每轮都读；有点陌生：偶数轮；有点印象：每 3 轮一次；熟悉：不再播放</div>
       <div class="sub">词典</div>
       <div class="muted small" id="dictInfo">内置词典：检查中…</div>
+      <div class="inline"><button class="btn small" id="dictAll">全部下载到本机（约 19 MB，离线可查所有词）</button></div>
       <label class="f" style="margin-top:8px">韦氏词典 Key（可选，只保存在本机）
         <input type="text" id="mwKey" placeholder="没有可以不填" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off">
       </label>
@@ -309,7 +316,8 @@ label.f textarea,label.f input{margin-top:4px}
   <div class="lvrow" id="dLv"></div>
   <div class="sub" style="margin-top:14px">所属播放列表</div>
   <div class="chips" id="dLists"></div>
-  <label class="f">释义<textarea id="dDef" rows="3"></textarea></label>
+  <label class="f">中文释义<textarea id="dZh" rows="2"></textarea></label>
+  <label class="f">英文释义<textarea id="dDef" rows="3"></textarea></label>
   <label class="f">例句<textarea id="dEx" rows="3" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea></label>
   <label class="f">美式音标（仅显示）<input type="text" id="dIpa" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
   <label class="f">发音拆解（朗读用，例：c - a - t）<input type="text" id="dSp" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
@@ -330,7 +338,7 @@ label.f textarea,label.f input{margin-top:4px}
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const LV = ['很陌生', '陌生', '有点陌生', '有点印象'];
+const LV = ['很陌生', '陌生', '有点陌生', '有点印象', '✓熟悉'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
@@ -381,7 +389,7 @@ const splitLetters = w => [...w].filter(c => /[a-z]/.test(c)).join(' - ');
 let seq = 0;
 function newRecord(w, o = {}) {
   return {word:w, definition:o.definition || '', example:o.example || '', ipa:o.ipa || '',
-          pron_split: o.pron_split ?? splitLetters(w), level:0, created_at: Date.now() * 100 + (seq++ % 100)};
+          pron_split: o.pron_split ?? splitLetters(w), zh: o.zh || '', level:0, created_at: Date.now() * 100 + (seq++ % 100)};
 }
 const byOld = (a, b) => a.created_at - b.created_at;
 
@@ -498,48 +506,95 @@ async function wikiExample(w) {
   return '';
 }
 
-/* 内置词典（dict.json，与 index.html 放在同一目录） */
-const DICT_VER = 'wn30-cmu-1';
+/* 内置词典：dict/ 文件夹里按首字母分卷，用到哪卷才下载，下载后存在本机 */
+const DICT_VER = 'ecdict-wn-cmu-3';
 const POSW = {n:'noun', v:'verb', a:'adjective', r:'adverb'};
-let localDict = null, localDictState = 'loading';
+const shardMem = {}; // 'a' / 'xa' -> 数据
+let dictOK = null;   // null 未知，true 能用，false 没有 dict 文件夹
 const kvGet = k => wrap(store('kv', 'readonly').get(k));
 const kvPut = (k, v) => wrap(store('kv', 'readwrite').put(v, k));
-async function loadLocalDict() {
-  try {
-    const cached = await kvGet('dict');
-    if (cached && cached.ver === DICT_VER) { localDict = cached.data; }
-  } catch (e) {}
-  if (!localDict) {
-    try {
-      const r = await fetch('dict.json', {cache: 'no-cache'});
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      localDict = await r.json();
-      try { await kvPut('dict', {ver: DICT_VER, data: localDict}); } catch (e) {}
-    } catch (e) { localDict = null; }
+const shardKey = w => (w[0] >= 'a' && w[0] <= 'z') ? w[0] : '_';
+// 分卷是 gzip 压缩的 JSON；手机下载后在本机解压
+async function unpackShard(buf) {
+  const u8 = new Uint8Array(buf);
+  if (u8[0] === 0x1f && u8[1] === 0x8b) {
+    if (typeof DecompressionStream === 'undefined') throw new Error('no-gzip');
+    const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return JSON.parse(await new Response(stream).text());
   }
-  localDictState = localDict ? 'ok' : 'missing';
-  $('dictInfo').textContent = localDict ? `内置词典：已加载 ${Object.keys(localDict).length.toLocaleString()} 个词，查词不用联网` : '内置词典：没找到 dict.json，只能联网查词';
+  return JSON.parse(new TextDecoder().decode(u8));
 }
-function localEntry(w) {
-  if (!localDict) return null;
-  const e = localDict[w];
-  if (!e) return null;
-  return newRecord(w, {definition: `(${POSW[e[0]] || e[0]}) ${e[1]}`, example: e[2] || '', ipa: e[3] || ''});
+async function getShard(name) {
+  if (shardMem[name] !== undefined) return shardMem[name];
+  try { const c = await kvGet('dict:' + name); if (c && c.ver === DICT_VER) return (shardMem[name] = c.data); } catch (e) {}
+  if (dictOK === false) return (shardMem[name] = null);
+  try {
+    const r = await fetch(`dict/${name}.dat`);
+    if (r.status === 404) { if (dictOK === null && name.length === 1) dictOK = false; return (shardMem[name] = null); }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await unpackShard(await r.arrayBuffer());
+    dictOK = true;
+    try { await kvPut('dict:' + name, {ver: DICT_VER, data}); } catch (e) {}
+    updateDictInfo();
+    return (shardMem[name] = data);
+  } catch (e) { return null; } // 断网且没缓存：这次查不到，不记住结果，下次再试
 }
-function localLemma(w) { // 复数、过去式等：借用原形的释义
-  if (!localDict || w.includes(' ')) return null;
-  const tries = [];
-  if (w.endsWith('ies')) tries.push(w.slice(0, -3) + 'y');
-  if (w.endsWith('es')) tries.push(w.slice(0, -2));
-  if (w.endsWith('s')) tries.push(w.slice(0, -1));
-  if (w.endsWith('ied')) tries.push(w.slice(0, -3) + 'y');
-  if (w.endsWith('ed')) tries.push(w.slice(0, -2), w.slice(0, -1));
-  if (w.endsWith('ing')) tries.push(w.slice(0, -3), w.slice(0, -3) + 'e');
-  for (const t of tries) {
-    const e = localDict[t];
-    if (e) return newRecord(w, {definition: `(${POSW[e[0]] || e[0]}) ${e[1]}（原形 ${t}）`, example: e[2] || '', ipa: ''});
+function entryToRec(w, e, note) {
+  const [pos, def, ex, ipa, zh] = e;
+  const p = POSW[pos] || pos;
+  return newRecord(w, {definition: def ? (p ? `(${p}) ` : '') + def + (note || '') : '', example: ex || '', ipa: ipa || '', zh: (zh || '') + (note && zh ? note : '')});
+}
+// 查内置词典：常用卷 → 扩展卷 → 变形还原（went→go）
+async function localLookup(w, depth = 0) {
+  const k = shardKey(w);
+  const main = await getShard(k);
+  if (main && main.w[w]) return entryToRec(w, main.w[w]);
+  const ext = await getShard('x' + k);
+  if (ext && ext.w[w]) return entryToRec(w, ext.w[w]);
+  const lem = main && main.l[w];
+  if (lem && depth === 0) {
+    const r = await localLookup(lem, 1);
+    if (r) { const note = `（原形 ${lem}）`; return newRecord(w, {definition: r.definition ? r.definition + note : '', example: r.example, ipa: '', zh: r.zh ? r.zh + note : ''}); }
   }
   return null;
+}
+async function updateDictInfo() {
+  let n = 0;
+  try { n = (await wrap(store('kv', 'readonly').getAllKeys())).filter(k => String(k).startsWith('dict:')).length; } catch (e) {}
+  $('dictInfo').textContent = dictOK === false
+    ? '内置词典：网站上没找到 dict 文件夹，只能联网查词'
+    : `内置英汉词典（约 70 万词条）：用到才下载，已存到本机 ${n}/53 卷`;
+}
+async function downloadAllDict() {
+  const names = [];
+  for (let c = 97; c <= 122; c++) { const l = String.fromCharCode(c); names.push(l, 'x' + l); }
+  names.push('_', 'x_');
+  $('dictAll').disabled = true;
+  let ok = 0;
+  for (let i = 0; i < names.length; i++) {
+    $('dictInfo').textContent = `正在下载词典 ${i + 1}/${names.length}…`;
+    if (await getShard(names[i])) ok++;
+  }
+  $('dictAll').disabled = false;
+  await updateDictInfo();
+  toast(ok >= names.length - 2 ? '词典已全部存到本机，断网也能查' : '有部分分卷没下载成功，稍后再试一次');
+}
+// 给单词库里还没有中文的单词补上中文
+async function backfillZh() {
+  const need = [...words.values()].filter(w => w.zh === undefined);
+  if (!need.length) return;
+  let n = 0;
+  for (const w of need) {
+    const r = await localLookup(w.word);
+    if (dictOK === false) return;
+    if (r === null && dictOK === null) continue;
+    w.zh = (r && r.zh) || '';
+    if (!w.ipa && r && r.ipa) w.ipa = r.ipa;
+    await dbPut(w); n++;
+    if (n % 20 === 0) renderList();
+  }
+  renderList();
+  if (curWord && words.get(curWord)) showNow(words.get(curWord));
 }
 
 /* 韦氏词典（需要 key） */
@@ -591,25 +646,22 @@ async function remoteExample(w) {
 }
 // 返回：记录 / null(所有词典都查不到)；所有在线来源都连不上且内置也没有时抛错
 async function fetchWord(w) {
-  const loc = localEntry(w);
-  if (loc) { if (!loc.example) loc.example = await remoteExample(w); return loc; }
-  let answered = false;
+  const loc = await localLookup(w);
+  if (loc && loc.definition) { if (!loc.example) loc.example = await remoteExample(w); return loc; }
+  // 内置只有中文（或没有）：再去在线词典要英文释义和例句；连不上也没关系
+  let rem = null, answered = false;
   if (S.mwKey && mwFails < 2) {
-    try { const rec = await fromMW(w); mwFails = 0; answered = true; if (rec) return rec; } catch (e) { mwFails++; }
+    try { rem = await fromMW(w); mwFails = 0; answered = true; } catch (e) { mwFails++; }
   }
-  if (dictFails < 2) {
-    try { const rec = await fromDictApi(w); dictFails = 0; answered = true; if (rec) return rec; } catch (e) { dictFails++; }
+  if (!rem && dictFails < 2) {
+    try { rem = await fromDictApi(w); dictFails = 0; answered = true; } catch (e) { dictFails++; }
   }
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const rec = await fromDatamuse(w);
-      answered = true;
-      if (rec) { if (!rec.example) rec.example = await wikiExample(w); return rec; }
-      break;
-    } catch (e) { if (attempt === 0) await sleep(1000); }
+  if (!rem) for (let attempt = 0; attempt < 2; attempt++) {
+    try { rem = await fromDatamuse(w); answered = true; if (rem && !rem.example) rem.example = await wikiExample(w); break; }
+    catch (e) { if (attempt === 0 && !loc) await sleep(1000); else break; }
   }
-  const lem = localLemma(w);
-  if (lem) return lem;
+  if (rem) { rem.zh = loc ? loc.zh : ''; if (!rem.ipa && loc) rem.ipa = loc.ipa; return rem; }
+  if (loc) return loc;
   if (answered) return null;
   throw new Error('network');
 }
@@ -642,7 +694,7 @@ async function processWords(targets, label) {
     try {
       const rec = await fetchWord(w);
       streak = 0;
-      if (rec) { cur.definition = rec.definition; cur.example = rec.example; cur.ipa = rec.ipa; delete cur.fail; ok++; }
+      if (rec) { cur.definition = rec.definition; cur.example = rec.example; cur.ipa = rec.ipa; cur.zh = rec.zh || ''; delete cur.fail; ok++; }
       else { cur.fail = 'nf'; nf++; }
     } catch (e) {
       cur.fail = 'net'; net++;
@@ -724,7 +776,7 @@ function renderList() {
   const inList = S.view && lists.has(S.view);
   const base = inList ? lists.get(S.view).words.map(w => words.get(w)).filter(Boolean)
                       : [...words.values()].sort((a, b) => b.created_at - a.created_at);
-  visible = base.filter(w => (!q || w.word.includes(q) || (w.definition || '').toLowerCase().includes(q)) &&
+  visible = base.filter(w => (!q || w.word.includes(q) || (w.definition || '').toLowerCase().includes(q) || (w.zh || '').includes(q)) &&
                              (f === 'all' || String(w.level) === f));
   for (const w of [...sel]) if (!words.has(w)) sel.delete(w);
   $('count').textContent = inList ? `本列表 ${base.length} 个 · 库中共 ${words.size} 个` : `共 ${words.size} 个`;
@@ -735,7 +787,7 @@ function renderList() {
   if (words.size && inList && !base.length) empty = '这个列表还没有单词。<br>切到「全部单词」，勾选单词 → 加入列表。';
   else if (words.size) empty = '没有匹配的单词';
   $('list').innerHTML = visible.length
-    ? visible.map(w => `<li data-w="${esc(w.word)}"><input type="checkbox" class="ck" ${sel.has(w.word) ? 'checked' : ''} aria-label="选择 ${esc(w.word)}"><div class="wmain"><b>${esc(w.word)}</b><span class="wdef">${esc(w.definition || (w.fail === 'net' ? '（待抓取释义）' : '（无释义）'))}</span></div><span class="chip l${w.level}">${LV[w.level]}</span></li>`).join('')
+    ? visible.map(w => `<li data-w="${esc(w.word)}"><input type="checkbox" class="ck" ${sel.has(w.word) ? 'checked' : ''} aria-label="选择 ${esc(w.word)}"><div class="wmain"><b>${esc(w.word)}</b><span class="wdef">${esc(w.zh || w.definition || (w.fail === 'net' ? '（待抓取释义）' : '（无释义）'))}</span></div><span class="chip l${w.level}">${LV[w.level]}</span></li>`).join('')
     : `<li class="emptyli">${empty}</li>`;
   markPlaying();
 }
@@ -772,6 +824,7 @@ function renderLv(box, word) {
     await update(word, {level: +b.dataset.lv});
     renderLv(box, word);
     if (box !== $('nowLv') && curWord === word) renderLv($('nowLv'), word);
+    if (+b.dataset.lv === 4 && playing && curWord === word) { toast(`「${word}」已标为熟悉，不再播放`); skip(); }
   };
 }
 
@@ -789,6 +842,7 @@ function openDetail(word) {
   $('dWord').textContent = w.word;
   $('dIpaView').textContent = w.ipa || '';
   $('dDef').value = w.definition || '';
+  $('dZh').value = w.zh || '';
   $('dEx').value = w.example || '';
   $('dIpa').value = w.ipa || '';
   $('dSp').value = w.pron_split || '';
@@ -880,6 +934,8 @@ function showNow(w) {
   $('nowIpa').textContent = w.ipa || '';
   $('nowDef').textContent = w.definition || '';
   $('nowDef').classList.toggle('blur', S.hideDef && !!w.definition);
+  $('nowZh').textContent = w.zh || '';
+  $('nowZh').classList.toggle('blur', S.hideDef && !!w.zh);
   $('nowEx').textContent = w.example || '';
   $('darkWord').textContent = w.word;
   renderLv($('nowLv'), w.word);
@@ -905,6 +961,7 @@ async function playWord(w, tok) {
 function startPlay() {
   if (!hasTTS) { setP('这个浏览器不支持语音朗读'); return false; }
   if (!playPool().length) { setP(playListObj() ? `播放列表${poolName()}还是空的，先到「单词库」页往里加单词` : '单词库还是空的，先到「单词库」页添加单词'); return false; }
+  if (!playPool().some(w => w.level < 4)) { setP(`${poolName()}里的单词都已标为熟悉。要重新复习，可以把单词改回其他等级`); return false; }
   unlockTTS();
   playing = true;
   const tok = ++playToken;
@@ -918,6 +975,7 @@ async function runLoop(tok) {
     const pool = playPool();
     if (!pool.length) { setP('播放列表已空，已停止'); break; }
     const r = S.round, list = pool.filter(w => due(w.level, r));
+    if (!pool.some(w => w.level < 4)) { setP(`${poolName()}里的单词都已标为熟悉，没有要播放的了`); break; }
     if (!list.length) { S.round++; saveS(); updateRoundUI(); if (++emptyRounds > 6) break; continue; }
     emptyRounds = 0;
     for (let i = 0; i < list.length && tok === playToken; i++) {
@@ -995,7 +1053,7 @@ async function importBackup(file) {
     if (!Array.isArray(arr)) throw new Error('格式不对');
     const clean = arr.filter(o => o && o.word && norm(o.word)).map(o => {
       const w = norm(o.word);
-      const lv = Math.min(3, Math.max(0, parseInt(o.level, 10) || 0));
+      const lv = Math.min(4, Math.max(0, parseInt(o.level, 10) || 0));
       return {...newRecord(w), ...o, word:w, level:lv};
     });
     await dbPutMany(clean);
@@ -1062,8 +1120,8 @@ function bind() {
   $('dark').addEventListener('click', () => { const t = Date.now(); if (t - lastTap < 450) { exitDark(); lastTap = 0; } else lastTap = t; });
   $('playSel').onchange = e => { S.playList = e.target.value; saveS(); if (playing) toast(`下一轮开始播放${poolName()}`); };
   $('hideDef').checked = S.hideDef;
-  $('hideDef').onchange = e => { S.hideDef = e.target.checked; saveS(); $('nowDef').classList.toggle('blur', S.hideDef && !!$('nowDef').textContent); };
-  $('nowDef').onclick = () => $('nowDef').classList.remove('blur');
+  $('hideDef').onchange = e => { S.hideDef = e.target.checked; saveS(); ['nowDef', 'nowZh'].forEach(id => $(id).classList.toggle('blur', S.hideDef && !!$(id).textContent)); };
+  $('nowDef').onclick = $('nowZh').onclick = () => { $('nowDef').classList.remove('blur'); $('nowZh').classList.remove('blur'); };
 
   $('lookupBtn').onclick = lookup;
   $('lookupIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lookup(); } });
@@ -1141,8 +1199,8 @@ function bind() {
     renderDLists();
   };
   $('dSave').onclick = async () => {
-    const def = $('dDef').value.trim();
-    await update(dw, {definition:def, example:$('dEx').value.trim(), ipa:$('dIpa').value.trim(), pron_split:$('dSp').value.trim()});
+    const def = $('dDef').value.trim() || $('dZh').value.trim();
+    await update(dw, {zh:$('dZh').value.trim(), definition:$('dDef').value.trim(), example:$('dEx').value.trim(), ipa:$('dIpa').value.trim(), pron_split:$('dSp').value.trim()});
     if (def && words.get(dw) && words.get(dw).fail) { delete words.get(dw).fail; await dbPut(words.get(dw)); renderFail(); }
     if (curWord === dw) showNow(words.get(dw));
     closeDetail();
@@ -1164,6 +1222,7 @@ function bind() {
     unlockTTS();
     playWord({word:'example', example:'This is how your review will sound.', pron_split:'e - x - a - m - p - l - e'}, ++playToken);
   };
+  $('dictAll').onclick = downloadAllDict;
   $('mwKey').value = S.mwKey || '';
   $('mwType').value = S.mwType || 'learners';
   $('mwSave').onclick = async () => {
@@ -1200,7 +1259,7 @@ async function init() {
     await openDB();
     (await dbAll('words')).forEach(w => words.set(w.word, w));
     (await dbAll('lists')).forEach(l => lists.set(l.id, l));
-    loadLocalDict();
+    updateDictInfo().then(backfillZh);
     if (!S.migrated) { // 旧版本「勾选」的单词转成一个播放列表
       const ck = [...words.values()].filter(w => w.checked).sort(byOld).map(w => w.word);
       if (ck.length && !lists.size) { const l = await createList('默认列表'); await addToList(l.id, ck); S.playList = l.id; }
