@@ -542,7 +542,7 @@ label.f textarea,label.f input{margin-top:4px}
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026.10.08';
+const APP_VERSION = '2026.10.08.2';
 const LV = ['很陌生', '陌生', '有点陌生', '有点印象', '✓熟悉'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1391,8 +1391,13 @@ async function importWordlist(data) {
     else { const nl = {id: String(l.id), name: String(l.name), words: ws, created_at: Date.now() + ln}; lists.set(nl.id, nl); await saveList(nl); }
     ln++;
   }
+  let sn = 0;
+  if (Array.isArray(data.sents) && data.sents.length) {
+    sn = await addSentences(data.sents.filter(x => x && x.en).map(x => ({en: x.en, zh: x.zh || '', scene: x.scene || data.name || '未分类'})));
+    try { renderSentHome(); } catch (e) {}
+  }
   renderLists(); renderList(); renderFail(); checkBackup();
-  alert(`词表「${data.name || '词表'}」导入完成：新增 ${added} 个单词，更新 ${updated} 个已有单词的释义，${ln} 个播放列表。已有单词的熟悉度和练习进度保持不变。`);
+  alert(`词表「${data.name || '词表'}」导入完成：新增 ${added} 个单词，更新 ${updated} 个已有单词的释义，${ln} 个播放列表` + (data.sents ? `，新增 ${sn} 个句子（重复的句子自动跳过）` : '') + `。已有单词的熟悉度和练习进度保持不变。`);
 }
 async function importBackup(file) {
   try {
