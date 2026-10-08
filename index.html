@@ -170,6 +170,47 @@ label.f textarea,label.f input{margin-top:4px}
 .now-word.sent{font-size:22px;line-height:1.4}
 .gend .big{font-size:44px;font-weight:800;margin:6px 0}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:calc(100vw - 32px);text-align:center}
+.npic{display:flex;justify-content:center;margin-bottom:6px}
+.npic:empty{display:none}
+.npic img{max-width:100%;max-height:150px;border-radius:12px;object-fit:contain}
+.npic .emo{font-size:64px;line-height:1.1}
+.dpic{display:flex;align-items:center;gap:12px;margin-top:10px}
+.dpic .npic{margin:0;min-width:72px;min-height:72px;align-items:center;background:var(--soft);border-radius:12px;padding:4px}
+.dpic .npic:empty{display:flex}
+.dpic .npic:empty::after{content:'无图';color:var(--muted);font-size:13px}
+.dpic .npic img{max-height:96px;max-width:140px}
+.dpic .npic .emo{font-size:52px}
+.picgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.picgrid button{appearance:none;border:1.5px solid var(--line);background:var(--soft);border-radius:10px;padding:2px;aspect-ratio:1;overflow:hidden;cursor:pointer}
+.picgrid img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.gfb .npic img{max-height:110px}
+#lq{position:fixed;inset:0;z-index:90;background:#0d0d10;color:#e8e8ee;display:flex;flex-direction:column;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#lq[hidden]{display:none}
+#lq .lqtop{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 8px}
+#lq .lqtop button{appearance:none;background:#24242a;color:#e8e8ee;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:15px}
+#lq .lqprog{flex:1;text-align:right;color:#8a8a94;font-size:14px}
+#lq .lqmain{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 22px;text-align:center}
+#lq .lqstep{color:#8a8a94;font-size:15px;min-height:22px}
+#lq .lqq{font-size:30px;font-weight:700;margin-top:10px;word-break:break-word;line-height:1.25}
+#lq .lqa{font-size:20px;margin-top:10px;color:#b9c6ff;min-height:28px;word-break:break-word}
+#lq .lqcount{font-size:56px;font-weight:800;color:#6f8fff;margin-top:12px;min-height:66px}
+#lq .npic img{max-height:130px}
+#lq.dim .lqq,#lq.dim .lqa,#lq.dim .npic,#lq.dim .lqcount{opacity:.12}
+#lq .lqhalves{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(14px + env(safe-area-inset-bottom))}
+#lq .lqhalves button{appearance:none;border:0;border-radius:18px;height:28vh;max-height:220px;font:inherit;font-size:24px;font-weight:700;color:#fff;opacity:.35;transition:opacity .2s}
+#lq .lqhalves button.live{opacity:1}
+#lq #lqNo{background:#7a2626}
+#lq #lqYes{background:#1f6b3d}
+#lq .lqend{font-size:16px;line-height:1.7}
+#lq .lqend b{font-size:34px}
+.ivbox{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:10px}
+.ivwho{font-size:13px;color:var(--muted);margin-bottom:4px}
+.ivq{font-size:19px;font-weight:600;line-height:1.4}
+.ivq.hide{filter:blur(7px)}
+.ivme{min-height:24px;font-size:17px;line-height:1.45}
+.ivme .hit{background:color-mix(in srgb, var(--l3) 25%, transparent);border-radius:4px;padding:0 2px}
+.ivmic{width:100%;margin-top:12px;font-size:18px!important;padding:16px!important}
+.ivmic.rec{background:var(--danger)!important;color:#fff!important;border-color:var(--danger)!important}
 #dark{position:fixed;inset:0;background:#000;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
 #dark[hidden]{display:none}
 #darkWord{color:#2a2a2e;font-size:30px;font-weight:700;padding:0 24px;text-align:center;word-break:break-word}
@@ -200,6 +241,7 @@ label.f textarea,label.f input{margin-top:4px}
     <div class="card">
       <div class="pstatus" id="pStatus">选好播放列表后点「开始复习」</div>
       <div id="now" class="now empty">
+        <div class="npic" id="nowPic"></div>
         <div class="now-word" id="nowWord">—</div>
         <div class="now-ipa" id="nowIpa"></div>
         <div class="now-zh" id="nowZh"></div>
@@ -259,6 +301,27 @@ label.f textarea,label.f input{margin-top:4px}
         </details>
       </div>
       <div class="card">
+        <h2>🎧 听题抢答 <span class="muted small">不看屏幕，开车走路都能练</span></h2>
+        <div class="muted small">手机先读题，留几秒让你在心里或嘴上说出答案，再读出正确答案。会就点右半屏，不会点左半屏，不点就当只听不计分。</div>
+        <label class="rowsel"><span>范围</span><select id="lqScope"></select></label>
+        <label class="rowsel"><span>方向</span><select id="lqDir"><option value="zh2en">听中文 → 说英文</option><option value="en2zh">听英文 → 想中文</option></select></label>
+        <label class="rowsel"><span>每组</span><select id="lqN"><option value="10">10 个</option><option value="20">20 个</option><option value="30">30 个</option></select></label>
+        <label class="rowsel"><span>想多久</span><select id="lqThink"><option value="3">3 秒</option><option value="4">4 秒</option><option value="6">6 秒</option><option value="8">8 秒</option></select></label>
+        <label class="rowsel"><span>等你点</span><select id="lqWait"><option value="4">4 秒</option><option value="6">6 秒</option><option value="10">10 秒</option><option value="0">一直等</option></select></label>
+        <button class="btn primary big" id="lqStart" style="width:100%;margin-top:12px">开始听题</button>
+        <div class="muted small" id="lqHint" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <h2>👮 模拟面谈官 <span class="muted small">开口回答，练面谈和客户问答</span></h2>
+        <div class="muted small">移民官（或客户）用美音提问，你按麦克风用英文回答，系统识别你说的话并对照参考答案。听不清可以直接说「Could you repeat that, please?」</div>
+        <label class="rowsel"><span>场景</span><select id="ivScope"></select></label>
+        <label class="rowsel"><span>每组</span><select id="ivN"><option value="5">5 题</option><option value="10">10 题</option><option value="20">20 题</option></select></label>
+        <label class="rowsel"><span>回答方式</span><select id="ivMode"><option value="voice">说出来（语音识别）</option><option value="type">打字回答</option></select></label>
+        <label class="switch"><input type="checkbox" id="ivShow"> 显示问题文字（关掉更像真实面谈，只靠听）</label>
+        <button class="btn primary big" id="ivStart" style="width:100%;margin-top:12px">开始面谈</button>
+        <div class="muted small" id="ivHint" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
         <h2>记忆阶段</h2>
         <div id="gStages"></div>
         <div class="muted small" style="margin-top:8px">答对进一级，下次复习的间隔变长（1→2→4→7→15→30 天）；答错退两级，明天再练。第 6 级再答对就算掌握，自动标为「熟悉」。</div>
@@ -288,6 +351,29 @@ label.f textarea,label.f input{margin-top:4px}
       <button class="btn primary big" id="gNext" style="width:100%;margin-top:10px" hidden>下一个</button>
     </div>
     <div class="card gend" id="gEnd" hidden></div>
+    <div class="card" id="ivPlay" hidden>
+      <div class="gtop"><button class="btn small ghost" id="ivQuit">✕ 结束</button><div class="gbar"><i id="ivBar"></i></div><span class="gcombo" id="ivProg"></span></div>
+      <div class="ivbox">
+        <div class="ivwho">👮 移民官 / 对方 <button class="btn small ghost" id="ivAgain" style="float:right;padding:2px 8px">🔊 再听</button></div>
+        <div class="ivq" id="ivQ"></div>
+        <button class="btn small ghost" id="ivReveal" style="margin-top:6px;padding:2px 8px">显示文字</button>
+      </div>
+      <div class="ivbox">
+        <div class="ivwho">🧑 你</div>
+        <div class="ivme" id="ivMe"><span class="muted">按下面的麦克风开始回答</span></div>
+      </div>
+      <button class="btn primary big ivmic" id="ivMic">🎙 开始回答</button>
+      <div id="ivTypeBox" hidden>
+        <textarea id="ivIn" rows="2" placeholder="用英文输入你的回答" autocapitalize="sentences" autocorrect="off" spellcheck="false"></textarea>
+        <button class="btn primary" id="ivSubmit" style="width:100%;margin-top:6px">提交回答</button>
+      </div>
+      <div class="gfb" id="ivFb" hidden></div>
+      <div class="inline" id="ivAct" hidden>
+        <button class="btn primary" id="ivNext" style="flex:1">下一题</button>
+        <button class="btn" id="ivRetry">再答一次</button>
+        <button class="btn ghost" id="ivFlip"></button>
+      </div>
+    </div>
   </section>
   <section class="page" data-page="lib" hidden>
     <div class="card">
@@ -382,6 +468,11 @@ label.f textarea,label.f input{margin-top:4px}
       <label class="switch"><input type="checkbox" id="readZh"> 读中文释义</label>
       <label class="switch"><input type="checkbox" id="readEx"> 读英文例句</label>
       <label class="switch"><input type="checkbox" id="readSp"> 拼读字母</label>
+      <label class="rg" style="grid-template-columns:6.5em 1fr"><span>字母读法</span>
+        <select id="spMode"><option value="lower">小写逐个读（推荐）</option><option value="dot">大写加句点逐个读</option><option value="joined">整串一起读（停顿由语音决定）</option><option value="upper">大写逐个读（旧，会读 capital）</option></select>
+      </label>
+      <div class="inline"><button class="btn small" id="spTest">🔤 试听拼读 q-u-a-l-i-t-y</button></div>
+      <div class="muted small">iPhone 上单个大写字母会被读成「capital A」。换一种读法点试听，选听起来最顺的。</div>
       <div class="sub">语速与停顿</div>
       <div id="ranges"></div>
       <div class="inline"><button class="btn small" id="testBtn">🔊 试听</button></div>
@@ -464,6 +555,36 @@ label.f textarea,label.f input{margin-top:4px}
         </ol>
       </details>
       <details>
+        <summary>🎧 听题抢答（不看屏幕）</summary>
+        <ol>
+          <li>「练习」页 →「听题抢答」，选范围和方向，点「开始听题」。</li>
+          <li>手机先读中文（或英文），倒数几秒让你说出答案，再读出正确答案。</li>
+          <li>会就点屏幕右半边，不会点左半边；在「等你点」的时间里不点，就当只听一遍，不影响进度。</li>
+          <li>点了「会/不会」的，和单词练习一样进遗忘曲线；不会的词这一组最后会再考一次。</li>
+          <li>开车时只听、用嘴答就好，不要看屏幕操作；「🌙 调暗」可以把字变暗。</li>
+        </ol>
+      </details>
+      <details>
+        <summary>👮 模拟面谈官（开口回答）</summary>
+        <ol>
+          <li>先导入「美国入籍考试词表.json」或在句库里有带问号的句子，例如工作场景的客户提问。</li>
+          <li>「练习」页 →「模拟面谈官」，选场景，点「开始面谈」，第一次会要麦克风权限，点「允许」。</li>
+          <li>听到问题后按「🎙 开始回答」，说完点「⏹ 说完了」（停顿一下也会自动结束）。</li>
+          <li>公民题看有没有说出答案里的关键词；是非题看有没有清楚回答 yes / no，建议说完整句子，例如「No, I have never been arrested.」。</li>
+          <li>没听清就说「Could you repeat that, please?」或「Could you say that more slowly?」，面谈官会放慢再问一遍，这句话本身也是面谈必备的。</li>
+          <li>识别要联网，口音重时可能识别不准：可以点「判我对」改判，或把回答方式改成「打字回答」。</li>
+        </ol>
+      </details>
+      <details>
+        <summary>🖼 给单词配图</summary>
+        <ol>
+          <li>常见的具体东西（床、卡车、宪法卷轴、自由女神像…）会自动配一个表情符号。</li>
+          <li>点开单词 →「图片」：可以拍照（比如车间里的机器零件），从相册选，或「🌐 网上找图」从维基百科挑一张。</li>
+          <li>图片压缩后存在手机里，断网也能看，也会跟着备份一起导出。</li>
+          <li>抽象词（allegiance、eligible）很难用图表达，就用例句记，不用勉强配图。</li>
+        </ol>
+      </details>
+      <details>
         <summary>⑥ 从文章里挑生词</summary>
         <ol>
           <li>「单词库」页 → 打开「📄 从文章里挑生词」，把客户邮件、产品手册等英文粘贴进去，点「挑出生词」。</li>
@@ -518,6 +639,16 @@ label.f textarea,label.f input{margin-top:4px}
   <div class="muted" id="dIpaView"></div>
   <div class="inline"><button class="btn small" id="dSpeak">🔊 朗读一遍</button></div>
   <div class="lvrow" id="dLv"></div>
+  <div class="sub" style="margin-top:14px">图片（帮助记意思）</div>
+  <div class="dpic"><div class="npic" id="dPic"></div>
+    <div class="chips" style="flex:1">
+      <span class="btn small">📷 拍照/相册<input type="file" id="dPicFile" accept="image/*" class="vh"></span>
+      <button type="button" class="btn small" id="dPicWeb">🌐 网上找图</button>
+      <button type="button" class="btn small" id="dPicEmo">😀 换表情</button>
+      <button type="button" class="btn small ghost" id="dPicDel">去掉</button>
+    </div>
+  </div>
+  <div id="dPicRes"></div>
   <div class="sub" style="margin-top:14px">所属播放列表</div>
   <div class="chips" id="dLists"></div>
   <label class="f">中文释义<textarea id="dZh" rows="2"></textarea></label>
@@ -531,6 +662,17 @@ label.f textarea,label.f input{margin-top:4px}
   </div>
 </dialog>
 
+<div id="lq" hidden>
+  <div class="lqtop"><button id="lqQuit">✕ 结束</button><button id="lqDim">🌙 调暗</button><div class="lqprog" id="lqProg"></div></div>
+  <div class="lqmain" id="lqMain">
+    <div class="lqstep" id="lqStep"></div>
+    <div class="npic" id="lqPic"></div>
+    <div class="lqq" id="lqQ"></div>
+    <div class="lqa" id="lqA"></div>
+    <div class="lqcount" id="lqCount"></div>
+  </div>
+  <div class="lqhalves" id="lqHalves"><button id="lqNo">✗ 不会</button><button id="lqYes">✓ 会</button></div>
+</div>
 <div id="dark" hidden>
   <div id="darkWord"></div>
   <div id="darkInfo"></div>
@@ -542,7 +684,7 @@ label.f textarea,label.f input{margin-top:4px}
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const APP_VERSION = '2026.10.08.2';
+const APP_VERSION = '2026.10.09';
 const LV = ['很陌生', '陌生', '有点陌生', '有点印象', '✓熟悉'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -554,7 +696,7 @@ function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; c
 /* ---------- 设置 ---------- */
 const DEF = {rateWord:.95, rateEx:.85, rateSp:.8, pWord:1.2, pEx:1.2, pSp:1.5, voice:'', hideDef:false, round:1,
              wordReps:2, pRep:2, rateZh:1, pZh:1.2, pLetter:.35, readZh:true, readEx:true, readSp:true, zhVoice:'',
-             lastBackup:0, bkDays:7, snoozeUntil:0, view:'', playList:'', impTo:'', migrated:false, gScope:'', gNewN:10, gLastDay:'', gStreak:0, exLimit:5000, sScope:'', sNewN:5, exTo:'', mwKey:'', mwType:'learners'};
+             lastBackup:0, bkDays:7, snoozeUntil:0, view:'', playList:'', impTo:'', migrated:false, gScope:'', gNewN:10, gLastDay:'', gStreak:0, exLimit:5000, sScope:'', sNewN:5, exTo:'', mwKey:'', mwType:'learners', spMode:'lower', lqScope:'', lqDir:'zh2en', lqN:10, lqThink:4, lqWait:6, ivScope:'', ivN:10, ivMode:'voice', ivShow:false};
 let S = {...DEF};
 try { S = {...DEF, ...JSON.parse(localStorage.getItem('srs_settings') || '{}')}; } catch (e) {}
 const saveS = () => { try { localStorage.setItem('srs_settings', JSON.stringify(S)); } catch (e) {} };
@@ -1058,6 +1200,7 @@ function openDetail(word) {
   $('dEx').value = w.example || '';
   $('dIpa').value = w.ipa || '';
   $('dSp').value = w.pron_split || '';
+  $('dPic').innerHTML = picHTML(w); $('dPicRes').innerHTML = '';
   renderLv($('dLv'), word);
   renderDLists();
   if (typeof $('dlg').showModal === 'function') $('dlg').showModal(); else $('dlg').setAttribute('open', '');
@@ -1105,12 +1248,12 @@ function wait(ms) {
 }
 const interrupt = () => [...wakers].forEach(f => f());
 
-function speak(text, rate, lang = 'en') {
+function speak(text, rate, lang = 'en', vo = null) {
   return new Promise(res => {
     if (!hasTTS || !text || !text.trim()) { res(); return; }
     const u = new SpeechSynthesisUtterance(text);
     if (lang === 'zh') { if (zhVoice) u.voice = zhVoice; u.lang = 'zh-CN'; }
-    else { if (voice) u.voice = voice; u.lang = 'en-US'; }
+    else { if (vo || voice) u.voice = vo || voice; u.lang = 'en-US'; }
     u.rate = rate;
     let done = false;
     const fin = () => { if (done) return; done = true; clearTimeout(t); wakers.delete(fin); res(); };
@@ -1169,6 +1312,7 @@ function showNow(w) {
   $('now').classList.remove('empty');
   $('nowWord').textContent = w.word;
   $('nowWord').classList.toggle('sent', !!w.isSent);
+  $('nowPic').innerHTML = w.isSent ? '' : picHTML(w);
   $('nowIpa').textContent = w.ipa || '';
   $('nowDef').textContent = w.definition || '';
   $('nowDef').classList.toggle('blur', S.hideDef && !!w.definition);
@@ -1179,12 +1323,21 @@ function showNow(w) {
   renderLv($('nowLv'), w.word);
   markPlaying();
 }
-// 拼读：每个字母单独朗读（大写单个字母，系统语音会按字母名读），字母之间留间隔
+// 拼读：把拆解内容变成字母数组；用户自己写的拆解（不是单个字母）返回 null，原样朗读
 function spellLetters(text) {
   const t = String(text || '').trim();
   if (!t) return null;
-  if (!/^[a-z](?:[\s\-,.·]+[a-z])*$/i.test(t)) return null; // 用户自己写的拆解内容，原样朗读
-  return t.toUpperCase().split(/[\s\-,.·]+/).filter(Boolean);
+  if (!/^[a-z](?:[\s\-,.·]+[a-z])*$/i.test(t)) return null;
+  return t.toLowerCase().split(/[\s\-,.·]+/).filter(Boolean);
+}
+// 字母怎么交给语音：iPhone 把单个大写字母读成「capital A」，默认改用小写
+const letterText = c => S.spMode === 'upper' ? c.toUpperCase() : S.spMode === 'dot' ? c.toUpperCase() + '.' : c.toLowerCase();
+async function speakSpelling(letters, ok) {
+  if (S.spMode === 'joined') { await speak(letters.join(', '), S.rateSp); return; }
+  for (let k = 0; k < letters.length; k++) {
+    await speak(letterText(letters[k]), S.rateSp); if (!ok()) return;
+    if (k < letters.length - 1) { await wait(S.pLetter * 1000); if (!ok()) return; }
+  }
 }
 // 中文释义转成适合朗读的文字：去掉词性、[经]这类标签，只读前三个意思
 function zhForTTS(zh) {
@@ -1215,12 +1368,8 @@ async function playWord(w, tok) {
   // 4) 拼读字母
   if (S.readSp && w.pron_split) {
     const letters = spellLetters(w.pron_split);
-    if (letters) {
-      for (let k = 0; k < letters.length; k++) {
-        await speak(letters[k], S.rateSp); if (!ok()) return;
-        if (k < letters.length - 1) { await wait(S.pLetter * 1000); if (!ok()) return; }
-      }
-    } else { await speak(w.pron_split, S.rateSp); if (!ok()) return; }
+    if (letters) { await speakSpelling(letters, ok); if (!ok()) return; }
+    else { await speak(w.pron_split, S.rateSp); if (!ok()) return; }
     await wait(S.pSp * 1000);
   }
 }
@@ -1503,7 +1652,7 @@ function renderGameHome() {
   const lv0 = pool.filter(w => w.srs && !isMastered(w) && w.srs.s === 0).length;
   if (lv0) rows.splice(1, 0, ['0 级 · 明天', lv0, '']);
   const max = Math.max(1, ...rows.map(r => r[1]));
-  renderSentHome();
+  renderSentHome(); renderLqHome(); renderIvHome();
   $('gListen').disabled = !pool.some(w => isDue(w, now));
   $('gStages').innerHTML = rows.map(([name, n, cls]) => `<div class="srow ${cls}"><span>${name}</span><div class="trk"><i style="width:${n ? Math.max(3, n / max * 100) : 0}%"></i></div><output>${n}</output></div>`).join('');
   updateGameBadge();
@@ -1618,7 +1767,7 @@ async function answer(given) {
   }
   const fb = $('gFb');
   fb.className = 'gfb ' + (ok ? 'ok' : 'bad');
-  fb.innerHTML = `<b>${ok ? '✓ 答对了' : '✗ 正确答案'}</b>　<b>${esc(w.word)}</b> <span class="muted">${esc(w.ipa || '')}</span><div>${esc(meaningOf(w))}</div>` +
+  fb.innerHTML = `<div class="npic">${picHTML(w)}</div><b>${ok ? '✓ 答对了' : '✗ 正确答案'}</b>　<b>${esc(w.word)}</b> <span class="muted">${esc(w.ipa || '')}</span><div>${esc(meaningOf(w))}</div>` +
     (w.example ? `<div class="muted small" style="font-style:italic;margin-top:4px">${esc(w.example)}</div>` : '');
   fb.hidden = false;
   if (type === 'spell' || !ok) say(w.word);
@@ -1945,18 +2094,427 @@ async function handleQuickAdd() {
   }
 }
 
+/* ---------- 单词配图 ---------- */
+// 表情图：Unicode 表情名称 + 常用词/入籍/行业词手工对照；只给具体的东西配，抽象词不配
+const EMO = {"cyclone":"🌀","foggy":"🌁","closed umbrella":"🌂","umbrella":"🌂","night with stars":"🌃","sunrise over mountains":"🌄","sunrise":"🌅","cityscape at dusk":"🌆","sunset over buildings":"🌇","rainbow":"🌈","bridge at night":"🌉","water wave":"🌊","wave":"🌊","volcano":"🌋","milky way":"🌌","way":"🌌","earth globe europe-africa":"🌍","earth globe americas":"🌎","earth globe asia-australia":"🌏","globe with meridians":"🌐","crescent moon":"🌙","moon":"🌙","glowing star":"🌟","star":"🌟","shooting star":"🌠","thermometer":"🌡️","cloud with rain":"🌧","cloud with snow":"🌨","cloud with tornado":"🌪","fog":"🌫","hot dog":"🌭","dog":"🌭","taco":"🌮","burrito":"🌯","chestnut":"🌰","seedling":"🌱","evergreen tree":"🌲","tree":"🌳","deciduous tree":"🌳","palm tree":"🌴","cactus":"🌵","hot pepper":"🌶","pepper":"🌶","tulip":"🌷","cherry blossom":"🌸","blossom":"🌸","rose":"🌹","hibiscus":"🌺","sunflower":"🌻","ear of maize":"🌽","ear of rice":"🌾","herb":"🌿","four leaf clover":"🍀","maple leaf":"🍁","leaf":"🍁","fallen leaf":"🍂","mushroom":"🍄","tomato":"🍅","aubergine":"🍆","grapes":"🍇","melon":"🍈","watermelon":"🍉","tangerine":"🍊","lemon":"🍋","banana":"🍌","pineapple":"🍍","red apple":"🍎","apple":"🍎","green apple":"🍏","pear":"🍐","peach":"🍑","cherries":"🍒","strawberry":"🍓","hamburger":"🍔","slice of pizza":"🍕","meat on bone":"🍖","poultry leg":"🍗","leg":"🍗","rice cracker":"🍘","cracker":"🍘","rice ball":"🍙","ball":"🍙","cooked rice":"🍚","rice":"🍚","curry and rice":"🍛","steaming bowl":"🍜","bowl":"🍜","spaghetti":"🍝","bread":"🍞","french fries":"🍟","fries":"🍟","roasted sweet potato":"🍠","dango":"🍡","oden":"🍢","sushi":"🍣","fried shrimp":"🍤","shrimp":"🍤","soft ice cream":"🍦","shaved ice":"🍧","ice":"🍧","ice cream":"🍨","cream":"🍨","doughnut":"🍩","cookie":"🍪","chocolate bar":"🍫","bar":"🍫","candy":"🍬","lollipop":"🍭","custard":"🍮","honey pot":"🍯","pot":"🍯","shortcake":"🍰","bento box":"🍱","box":"📦","pot of food":"🍲","cooking":"🍳","fork and knife":"🍴","teacup without handle":"🍵","wine glass":"🍷","glass":"🍷","cocktail glass":"🍸","tropical drink":"🍹","drink":"🍹","beer mug":"🍺","mug":"🍺","clinking beer mugs":"🍻","baby bottle":"🍼","bottle":"🍼","popcorn":"🍿","ribbon":"🎀","wrapped present":"🎁","present":"🎁","birthday cake":"🎂","cake":"🎂","jack-o-lantern":"🎃","christmas tree":"🎄","father christmas":"🎅","christmas":"🎅","fireworks":"🎆","firework sparkler":"🎇","sparkler":"🎇","balloon":"🎈","party popper":"🎉","popper":"🎉","confetti ball":"🎊","tanabata tree":"🎋","crossed flags":"🎌","flags":"🎌","pine decoration":"🎍","decoration":"🎍","japanese dolls":"🎎","dolls":"🎎","carp streamer":"🎏","streamer":"🎏","wind chime":"🎐","chime":"🎐","moon viewing ceremony":"🎑","school satchel":"🎒","satchel":"🎒","graduation cap":"🎓","cap":"🎓","bouquet of flowers":"🎕","military medal":"🎖","medal":"🏅","reminder ribbon":"🎗","studio microphone":"🎙","microphone":"🎙","level slider":"🎚","slider":"🎚","control knobs":"🎛","knobs":"🎛","film frames":"🎞","frames":"🎞","admission tickets":"🎟","tickets":"🎟","carousel horse":"🎠","horse":"🎠","ferris wheel":"🎡","wheel":"🎡","roller coaster":"🎢","coaster":"🎢","movie camera":"🎥","camera":"📷","cinema":"🎦","headphone":"🎧","artist palette":"🎨","palette":"🎨","top hat":"🎩","hat":"🎩","circus tent":"🎪","tent":"🎪","ticket":"🎫","clapper board":"🎬","board":"🎬","performing arts":"🎭","arts":"🎭","video game":"🎮","game":"🎮","direct hit":"🎯","hit":"🎯","slot machine":"🎰","machine":"⚙️","billiards":"🎱","game die":"🎲","die":"🎲","bowling":"🎳","musical note":"🎵","note":"🎵","multiple musical notes":"🎶","saxophone":"🎷","guitar":"🎸","musical keyboard":"🎹","keyboard":"🎹","trumpet":"🎺","violin":"🎻","musical score":"🎼","score":"🎼","basketball and hoop":"🏀","chequered flag":"🏁","flag":"🇺🇸","snowboarder":"🏂","runner":"🏃","surfer":"🏄","sports medal":"🏅","trophy":"🏆","horse racing":"🏇","racing":"🏇","american football":"🏈","football":"🏈","rugby football":"🏉","swimmer":"🏊","weight lifter":"🏋","lifter":"🏋","golfer":"🏌","racing motorcycle":"🏍","motorcycle":"🏍","racing car":"🏎","car":"🚗","volleyball":"🏐","snow capped mountain":"🏔","camping":"🏕","beach with umbrella":"🏖","building construction":"🏗","construction":"🏗","house buildings":"🏘","buildings":"🏘","cityscape":"🏙","derelict house building":"🏚","classical building":"🏛","building":"🏛","desert":"🏜️","desert island":"🏝","island":"🏝️","national park":"🏞","park":"🏞","stadium":"🏟","house building":"🏠","house with garden":"🏡","office building":"🏢","japanese post office":"🏣","european post office":"🏤","hospital":"🏥","bank":"🏦","automated teller machine":"🏧","hotel":"🏨","love hotel":"🏩","convenience store":"🏪","store":"🏪","school":"🏫","department store":"🏬","factory":"🏭","izakaya lantern":"🏮","lantern":"🏮","japanese castle":"🏯","castle":"🏯","european castle":"🏰","rosette":"🏵","label":"🏷","amphora":"🏺","rat":"🐀","mouse":"🐁","ox":"🐂","water buffalo":"🐃","buffalo":"🐃","cow":"🐄","tiger":"🐅","leopard":"🐆","rabbit":"🐇","cat":"🐈","dragon":"🐉","crocodile":"🐊","whale":"🐋","snail":"🐌","snake":"🐍","ram":"🐏","goat":"🐐","sheep":"🐑","monkey":"🐒","rooster":"🐓","chicken":"🐔","pig":"🐖","boar":"🐗","elephant":"🐘","octopus":"🐙","spiral shell":"🐚","shell":"🐚","bug":"🐛","ant":"🐜","honeybee":"🐝","lady beetle":"🐞","beetle":"🐞","fish":"🐟","tropical fish":"🐠","blowfish":"🐡","turtle":"🐢","hatching chick":"🐣","chick":"🐣","baby chick":"🐤","front-facing baby chick":"🐥","bird":"🐦","penguin":"🐧","koala":"🐨","poodle":"🐩","dromedary camel":"🐪","camel":"🐪","bactrian camel":"🐫","dolphin":"🐬","spouting whale":"🐳","pig nose":"🐽","nose":"🐽","paw prints":"🐾","prints":"🐾","chipmunk":"🐿","eyes":"👀","eye":"👁","ear":"👂","mouth":"👄","tongue":"👅","crown":"👑","womans hat":"👒","eyeglasses":"👓","necktie":"👔","t-shirt":"👕","jeans":"👖","dress":"👗","kimono":"👘","bikini":"👙","womans clothes":"👚","clothes":"👚","purse":"👛","handbag":"👜","pouch":"👝","mans shoe":"👞","shoe":"👞","athletic shoe":"👟","high-heeled shoe":"👠","womans sandal":"👡","sandal":"👡","womans boots":"👢","boots":"👢","footprints":"👣","bust in silhouette":"👤","busts in silhouette":"👥","boy":"👦","girl":"👧","man":"👨","woman":"👩","family":"👨‍👩‍👧","police officer":"👮","officer":"👮","bride with veil":"👰","man with turban":"👳","older man":"👴","older woman":"👵","baby":"👶","construction worker":"👷","worker":"👷","princess":"👸","japanese ogre":"👹","ogre":"👹","japanese goblin":"👺","goblin":"👺","ghost":"👻","baby angel":"👼","angel":"👼","extraterrestrial alien":"👽","alien":"👽","alien monster":"👾","monster":"👾","imp":"👿","skull":"💀","information desk person":"💁","guardsman":"💂","dancer":"💃","lipstick":"💄","nail polish":"💅","polish":"💅","barber pole":"💈","pole":"💈","syringe":"💉","pill":"💊","love letter":"💌","letter":"💌","ring":"💍","gem stone":"💎","stone":"💎","kiss":"💏","bouquet":"💐","couple with heart":"💑","wedding":"💒","beating heart":"💓","heart":"💓","broken heart":"💔","two hearts":"💕","hearts":"💕","sparkling heart":"💖","growing heart":"💗","blue heart":"💙","green heart":"💚","yellow heart":"💛","purple heart":"💜","heart with ribbon":"💝","revolving hearts":"💞","heart decoration":"💟","bomb":"💣","droplet":"💧","pile of poo":"💩","flexed biceps":"💪","biceps":"💪","speech balloon":"💬","thought balloon":"💭","money bag":"💰","bag":"💰","currency exchange":"💱","exchange":"💱","credit card":"💳","card":"💳","money with wings":"💸","seat":"💺","personal computer":"💻","computer":"💻","briefcase":"💼","minidisc":"💽","floppy disk":"💾","disk":"💾","optical disc":"💿","disc":"💿","dvd":"📀","file folder":"📁","folder":"📁","open file folder":"📂","page with curl":"📃","page facing up":"📄","calendar":"📅","tear-off calendar":"📆","card index":"📇","index":"📇","bar chart":"📊","chart":"📈","clipboard":"📋","pushpin":"📌","round pushpin":"📍","paperclip":"📎","straight ruler":"📏","ruler":"📏","triangular ruler":"📐","ledger":"📒","notebook":"📓","closed book":"📕","book":"📖","open book":"📖","green book":"📗","blue book":"📘","orange book":"📙","books":"📚","name badge":"📛","badge":"📛","scroll":"📜","memo":"📝","telephone receiver":"📞","receiver":"📞","pager":"📟","fax machine":"📠","satellite antenna":"📡","antenna":"📡","public address loudspeaker":"📢","cheering megaphone":"📣","megaphone":"📣","outbox tray":"📤","tray":"📤","inbox tray":"📥","package":"📦","incoming envelope":"📨","envelope":"📨","postbox":"📮","postal horn":"📯","horn":"📯","newspaper":"📰","mobile phone":"📱","phone":"📱","vibration mode":"📳","mode":"📳","mobile phone off":"📴","no mobile phones":"📵","antenna with bars":"📶","camera with flash":"📸","video camera":"📹","television":"📺","radio":"📻","videocassette":"📼","film projector":"📽","projector":"📽","portable stereo":"📾","stereo":"📾","prayer beads":"📿","beads":"📿","speaker":"🔈","battery":"🔋","electric plug":"🔌","plug":"🔌","key":"🔑","lock":"🔒","open lock":"🔓","bell":"🔔","fire":"🔥","electric torch":"🔦","torch":"🔦","wrench":"🔧","hammer":"🔨","nut and bolt":"🔩","hocho":"🔪","pistol":"🔫","microscope":"🔬","telescope":"🔭","crystal ball":"🔮","trident emblem":"🔱","emblem":"🔱","cross pommee":"🕂","pommee":"🕂","celtic cross":"🕈","cross":"🕈","dove of peace":"🕊","kaaba":"🕋","mosque":"🕌","synagogue":"🕍","bowl of hygieia":"🕏","bullhorn":"🕫","ringing bell":"🕭","candle":"🕯","mantelpiece clock":"🕰","clock":"🕒","no piracy":"🕲","piracy":"🕲","hole":"🕳","sleuth or spy":"🕵","dark sunglasses":"🕶","sunglasses":"🕶","spider":"🕷","spider web":"🕸","web":"🕸","joystick":"🕹","man dancing":"🕺","dancing":"🕺","clamshell mobile phone":"🖁","back of envelope":"🖂","stamped envelope":"🖃","flying envelope":"🖅","linked paperclips":"🖇","paperclips":"🖇","reversed victory hand":"🖔","desktop computer":"🖥","keyboard and mouse":"🖦","three networked computers":"🖧","printer":"🖨","pocket calculator":"🖩","calculator":"🖩","tape cartridge":"🖭","cartridge":"🖭","wired keyboard":"🖮","trackball":"🖲","old personal computer":"🖳","hard disk":"🖴","screen":"🖵","printer icon":"🖶","icon":"🖶","fax icon":"🖷","optical disc icon":"🖸","document with text":"🖹","document with picture":"🖻","frame with picture":"🖼","frame with tiles":"🖽","open folder":"🗁","card index dividers":"🗂","card file box":"🗃","file cabinet":"🗄","cabinet":"🗄️","empty note":"🗅","empty note page":"🗆","empty note pad":"🗇","note page":"🗉","page":"🗉","note pad":"🗊","pad":"🗊","empty document":"🗋","document":"📄","empty page":"🗌","empty pages":"🗍","pages":"🗍","wastebasket":"🗑","spiral note pad":"🗒","spiral calendar pad":"🗓","desktop window":"🗔","window":"🪟","minimize":"🗕","maximize":"🗖","overlap":"🗗","cancellation x":"🗙","x":"🗙","compression":"🗜","old key":"🗝","rolled-up newspaper":"🗞","stock chart":"🗠","dagger knife":"🗡","knife":"🔪","lips":"🗢","three rays above":"🗤","three rays below":"🗥","two speech bubbles":"🗪","three speech bubbles":"🗫","mood bubble":"🗰","bubble":"🗰","ballot script x":"🗴","world map":"🗺","map":"🗺️","mount fuji":"🗻","fuji":"🗻","tokyo tower":"🗼","tower":"🗼","statue of liberty":"🗽","silhouette of japan":"🗾","moyai":"🗿","rocket":"🚀","helicopter":"🚁","steam locomotive":"🚂","locomotive":"🚂","railway car":"🚃","high-speed train":"🚄","train":"🚆","metro":"🚇","station":"🚉","tram":"🚊","tram car":"🚋","bus":"🚌","oncoming bus":"🚍","trolleybus":"🚎","bus stop":"🚏","stop":"🚏","minibus":"🚐","ambulance":"🚑","fire engine":"🚒","engine":"🚒","police car":"🚓","oncoming police car":"🚔","taxi":"🚕","oncoming taxi":"🚖","automobile":"🚗","oncoming automobile":"🚘","recreational vehicle":"🚙","vehicle":"🚙","delivery truck":"🚚","truck":"🚚","articulated lorry":"🚛","lorry":"🚛","tractor":"🚜","monorail":"🚝","mountain railway":"🚞","railway":"🚞","suspension railway":"🚟","mountain cableway":"🚠","cableway":"🚠","aerial tramway":"🚡","tramway":"🚡","ship":"🚢","rowboat":"🚣","speedboat":"🚤","door":"🚪","bicycle":"🚲","no bicycles":"🚳","bicycles":"🚳","bicyclist":"🚴","mountain bicyclist":"🚵","pedestrian":"🚶","no pedestrians":"🚷","pedestrians":"🚷","children crossing":"🚸","crossing":"🚸","restroom":"🚻","toilet":"🚽","water closet":"🚾","closet":"🚾","shower":"🚿","bath":"🛀","bathtub":"🛁","passport control":"🛂","control":"🛂","customs":"🛃","baggage claim":"🛄","claim":"🛄","couch and lamp":"🛋","sleeping accommodation":"🛌","accommodation":"🛌","shopping bags":"🛍","bags":"🛍","bellhop bell":"🛎","bed":"🛏️","place of worship":"🛐","shopping trolley":"🛒","trolley":"🛒","stupa":"🛓","pagoda":"🛔","hindu temple":"🛕","temple":"🛕","hut":"🛖","elevator":"🛗","wireless":"🛜","playground slide":"🛝","slide":"🛝","ring buoy":"🛟","buoy":"🛟","hammer and wrench":"🛠","shield":"🛡","oil drum":"🛢","drum":"🛢","motorway":"🛣","railway track":"🛤","track":"🛤","motor boat":"🛥","boat":"🛥","up-pointing military airplane":"🛦","up-pointing airplane":"🛧","airplane":"✈️","northeast-pointing airplane":"🛪","airplane departure":"🛫","departure":"🛫","airplane arriving":"🛬","arriving":"🛬","satellite":"🛰","oncoming fire engine":"🛱","diesel locomotive":"🛲","passenger ship":"🛳","scooter":"🛴","motor scooter":"🛵","canoe":"🛶","sled":"🛷","flying saucer":"🛸","saucer":"🛸","skateboard":"🛹","auto rickshaw":"🛺","rickshaw":"🛺","pickup truck":"🛻","roller skate":"🛼","skate":"🛼","downward facing hook":"🤈","pinched fingers":"🤌","fingers":"🤌","brown heart":"🤎","pinching hand":"🤏","hand":"🤏","call me hand":"🤙","handshake":"🤝","pregnant woman":"🤰","breast-feeding":"🤱","palms up together":"🤲","selfie":"🤳","prince":"🤴","man in tuxedo":"🤵","mother christmas":"🤶","shrug":"🤷","person doing cartwheel":"🤸","juggling":"🤹","fencer":"🤺","modern pentathlon":"🤻","pentathlon":"🤻","wrestlers":"🤼","water polo":"🤽","polo":"🤽","handball":"🤾","diving mask":"🤿","mask":"🤿","wilted flower":"🥀","flower":"🌸","drum with drumsticks":"🥁","clinking glasses":"🥂","glasses":"🥂","tumbler glass":"🥃","spoon":"🥄","goal net":"🥅","net":"🥅","rifle":"🥆","first place medal":"🥇","second place medal":"🥈","third place medal":"🥉","boxing glove":"🥊","glove":"🥊","martial arts uniform":"🥋","curling stone":"🥌","softball":"🥎","flying disc":"🥏","croissant":"🥐","avocado":"🥑","cucumber":"🥒","bacon":"🥓","potato":"🥔","carrot":"🥕","baguette bread":"🥖","green salad":"🥗","salad":"🥗","stuffed flatbread":"🥙","flatbread":"🥙","egg":"🥚","glass of milk":"🥛","peanuts":"🥜","kiwifruit":"🥝","pancakes":"🥞","dumpling":"🥟","fortune cookie":"🥠","takeout box":"🥡","chopsticks":"🥢","bowl with spoon":"🥣","cup with straw":"🥤","coconut":"🥥","broccoli":"🥦","pie":"🥧","pretzel":"🥨","cut of meat":"🥩","sandwich":"🥪","canned food":"🥫","food":"🍽️","leafy green":"🥬","green":"🥬","mango":"🥭","moon cake":"🥮","bagel":"🥯","ninja":"🥷","sari":"🥻","lab coat":"🥼","coat":"🥼","goggles":"🥽","hiking boot":"🥾","boot":"🥾","flat shoe":"🥿","crab":"🦀","scorpion":"🦂","turkey":"🦃","eagle":"🦅","duck":"🦆","bat":"🦇","shark":"🦈","owl":"🦉","butterfly":"🦋","deer":"🦌","gorilla":"🦍","lizard":"🦎","rhinoceros":"🦏","squid":"🦑","hedgehog":"🦔","sauropod":"🦕","t-rex":"🦖","cricket":"🦗","kangaroo":"🦘","llama":"🦙","peacock":"🦚","hippopotamus":"🦛","parrot":"🦜","raccoon":"🦝","lobster":"🦞","mosquito":"🦟","microbe":"🦠","badger":"🦡","swan":"🦢","mammoth":"🦣","dodo":"🦤","sloth":"🦥","otter":"🦦","orangutan":"🦧","skunk":"🦨","flamingo":"🦩","oyster":"🦪","beaver":"🦫","bison":"🦬","seal":"🦭","guide dog":"🦮","probing cane":"🦯","cane":"🦯","bone":"🦴","foot":"🦶","tooth":"🦷","superhero":"🦸","supervillain":"🦹","safety vest":"🦺","vest":"🦺","mechanical arm":"🦾","arm":"🦾","mechanical leg":"🦿","cheese wedge":"🧀","wedge":"🧀","cupcake":"🧁","salt shaker":"🧂","shaker":"🧂","beverage box":"🧃","garlic":"🧄","onion":"🧅","falafel":"🧆","waffle":"🧇","butter":"🧈","mate drink":"🧉","ice cube":"🧊","cube":"🧊","bubble tea":"🧋","tea":"🍵","troll":"🧌","standing person":"🧍","person":"🧍","kneeling person":"🧎","deaf person":"🧏","adult":"🧑","child":"🧒","older adult":"🧓","bearded person":"🧔","person with headscarf":"🧕","person climbing":"🧗","climbing":"🧗","mage":"🧙","fairy":"🧚","vampire":"🧛","merperson":"🧜","elf":"🧝","genie":"🧞","zombie":"🧟","brain":"🧠","orange heart":"🧡","billed cap":"🧢","scarf":"🧣","gloves":"🧤","socks":"🧦","red gift envelope":"🧧","firecracker":"🧨","jigsaw puzzle piece":"🧩","test tube":"🧪","tube":"🧪","petri dish":"🧫","dish":"🧫","compass":"🧭","abacus":"🧮","fire extinguisher":"🧯","extinguisher":"🧯","toolbox":"🧰","brick":"🧱","magnet":"🧲","luggage":"🧳","lotion bottle":"🧴","spool of thread":"🧵","ball of yarn":"🧶","safety pin":"🧷","pin":"🧷","teddy bear":"🧸","bear":"🧸","broom":"🧹","basket":"🧺","roll of paper":"🧻","bar of soap":"🧼","sponge":"🧽","receipt":"🧾","nazar amulet":"🧿","amulet":"🧿","ballet shoes":"🩰","shoes":"🩰","one-piece swimsuit":"🩱","swimsuit":"🩱","briefs":"🩲","shorts":"🩳","thong sandal":"🩴","grey heart":"🩶","pink heart":"🩷","drop of blood":"🩸","adhesive bandage":"🩹","bandage":"🩹","stethoscope":"🩺","x-ray":"🩻","crutch":"🩼","yo-yo":"🪀","kite":"🪁","parachute":"🪂","boomerang":"🪃","magic wand":"🪄","wand":"🪄","pinata":"🪅","nesting dolls":"🪆","maracas":"🪇","flute":"🪈","ringed planet":"🪐","planet":"🪐","razor":"🪒","axe":"🪓","diya lamp":"🪔","lamp":"🪔","banjo":"🪕","military helmet":"🪖","helmet":"⛑️","accordion":"🪗","long drum":"🪘","coin":"🪙","carpentry saw":"🪚","saw":"🪚","screwdriver":"🪛","ladder":"🪜","hook":"🪝","mirror":"🪞","plunger":"🪠","sewing needle":"🪡","needle":"🪡","knot":"🪢","bucket":"🪣","mouse trap":"🪤","trap":"🪤","toothbrush":"🪥","headstone":"🪦","placard":"🪧","rock":"🪨","mirror ball":"🪩","identification card":"🪪","low battery":"🪫","hamsa":"🪬","folding hand fan":"🪭","khanda":"🪯","fly":"🪰","worm":"🪱","cockroach":"🪳","potted plant":"🪴","plant":"🏭","wood":"🪵","feather":"🪶","lotus":"🪷","coral":"🪸","empty nest":"🪹","nest":"🪹","nest with eggs":"🪺","hyacinth":"🪻","jellyfish":"🪼","wing":"🪽","goose":"🪿","anatomical heart":"🫀","lungs":"🫁","people hugging":"🫂","hugging":"🫂","pregnant man":"🫃","pregnant person":"🫄","person with crown":"🫅","moose":"🫎","donkey":"🫏","blueberries":"🫐","bell pepper":"🫑","olive":"🫒","tamale":"🫔","fondue":"🫕","teapot":"🫖","pouring liquid":"🫗","liquid":"🫗","beans":"🫘","jar":"🫙","ginger root":"🫚","root":"🫚","pea pod":"🫛","pod":"🫛","biting lip":"🫦","lip":"🫦","bubbles":"🫧","palm down hand":"🫳","palm up hand":"🫴","heart hands":"🫶","hands":"🫶","mattress":"🛏️","bedding":"🛏️","pillow":"🛏️","sewing":"🧵","sew":"🧵","thread":"🧵","quilt":"🧵","quilting":"🧵","stitch":"🪡","fabric":"🧶","foam":"🧽","glue":"🧴","adhesive":"🧴","spray":"🧴","spring":"🌀","coil":"🌀","machinery":"⚙️","gear":"⚙️","automation":"🤖","robot":"🤖","automatic":"🤖","conveyor":"➡️","forklift":"🚜","container":"📦","packing":"📦","carton":"📦","pallet":"📦","vessel":"🚢","shipment":"🚢","delivery":"🚚","freight":"🚚","flight":"✈️","drawer":"🗄️","lumber":"🪵","plywood":"🪵","screw":"🔩","bolt":"🔩","nut":"🔩","tool":"🧰","paint":"🎨","house":"🏠","home":"🏠","roof":"🏠","wall":"🧱","concrete":"🧱","pipe":"🔧","scissors":"✂️","cut":"✂️","cutting":"✂️","electricity":"⚡","power":"⚡","voltage":"⚡","light":"💡","temperature":"🌡️","warning":"⚠️","danger":"⚠️","safety":"🦺","warehouse":"🏭","trade":"🤝","deal":"🤝","agreement":"🤝","contract":"📝","signature":"✍️","sign":"✍️","email":"📧","telephone":"☎️","date":"📅","deadline":"⏰","time":"⏱️","money":"💵","price":"🏷️","cost":"💵","payment":"💳","deposit":"💰","invoice":"🧾","growth":"📈","graph":"📊","report":"📊","globe":"🌎","world":"🌎","earth":"🌎","video":"🎥","laptop":"💻","search":"🔍","inspection":"🔍","magnifier":"🔍","test":"🧪","sample":"🧪","scale":"⚖️","balance":"⚖️","weight":"⚖️","measure":"📏","length":"📏","award":"🏅","gift":"🎁","party":"🎉","celebrate":"🎉","music":"🎵","manual":"📖","file":"📁","paper":"📄","pen":"🖊️","pencil":"✏️","church":"⛪","police":"👮","soldier":"💂","doctor":"🧑‍⚕️","teacher":"🧑‍🏫","engineer":"👷","farmer":"🧑‍🌾","wife":"👩","husband":"👨","spouse":"💑","marriage":"💍","divorce":"💔","road":"🛣️","bridge":"🌉","mountain":"⛰️","river":"🏞️","ocean":"🌊","sea":"🌊","beach":"🏖️","snow":"❄️","rain":"🌧️","sun":"☀️","water":"💧","coffee":"☕","dove":"🕊️","peace":"🕊️","constitution":"📜","amendment":"📜","declaration":"📜","charter":"📜","law":"⚖️","justice":"⚖️","court":"⚖️","judge":"🧑‍⚖️","jury":"👥","trial":"⚖️","lawyer":"🧑‍⚖️","attorney":"🧑‍⚖️","vote":"🗳️","ballot":"🗳️","election":"🗳️","voter":"🗳️","suffrage":"🗳️","capitol":"🏛️","government":"🏛️","congress":"🏛️","senate":"🏛️","federal":"🏛️","legislature":"🏛️","supreme court":"🏛️","white house":"🏛️","president":"🎖️","stripes":"🇺🇸","anthem":"🎵","national anthem":"🎵","star-spangled banner":"🇺🇸","pledge of allegiance":"🇺🇸","oath":"✋","swear":"✋","raise your right hand":"✋","affirm":"✋","allegiance":"🇺🇸","citizen":"🧑","citizenship":"🇺🇸","naturalization":"🇺🇸","passport":"🛂","green card":"🪪","permanent resident card":"🪪","id":"🪪","driver's license":"🪪","fingerprints":"🖐️","biometrics":"🖐️","interpreter":"🗣️","interview":"🗣️","speech":"🗣️","freedom of speech":"🗣️","freedom of the press":"📰","press":"📰","freedom of religion":"🛐","religion":"🛐","religious freedom":"🛐","freedom of assembly":"👥","tax":"🧾","income tax":"🧾","tax return":"🧾","tax transcript":"🧾","print money":"💵","war":"⚔️","declare war":"⚔️","civil war":"⚔️","revolutionary war":"⚔️","world war one":"⚔️","world war two":"⚔️","cold war":"🧊","army":"🪖","military":"🪖","armed forces":"🪖","veteran":"🎖️","weapon":"🔫","bear arms":"🔫","weapons training":"🔫","arrested":"🚔","jail":"🔒","prison":"🔒","probation":"🔒","parole":"🔓","crime":"🚨","felony":"🚨","misdemeanor":"🚨","traffic ticket":"🎫","drunk":"🍺","habitual drunkard":"🍺","driving under the influence":"🍺","drugs":"💊","narcotics":"💊","controlled substance":"💊","gambling":"🎰","illegal gambling":"🎰","smuggle":"📦","deport":"✈️","deportation":"✈️","border":"🛂","immigrant":"🧳","immigration":"🛂","trips outside the united states":"✈️","travel":"🧳","reentry permit":"🛂","liberty":"🗽","independence day":"🎆","thanksgiving":"🦃","memorial day":"🎖️","veterans day":"🎖️","labor day":"👷","juneteenth":"⛓️","slavery":"⛓️","enslaved":"⛓️","emancipation proclamation":"⛓️","abolish":"⛓️","colony":"⛵","colonist":"⛵","colonies":"⛵","mayflower":"⛵","boston tea party":"🫖","pacific ocean":"🌊","atlantic ocean":"🌊","mississippi river":"🏞️","missouri river":"🏞️","harbor":"⚓","pearl harbor":"⚓","tribe":"🪶","american indian":"🪶","native american":"🪶","inventor":"💡","invention":"💡","diplomat":"🤝","treaty":"🤝","make treaties":"🤝","census":"📋","questionnaire":"📋","application":"📋","form n-400":"📋","form n-14":"📋","form n-445":"📋","certificate":"📜","certificate of naturalization":"📜","birth certificate":"📜","marriage certificate":"💍","divorce decree":"💔","appointment notice":"📅","interview notice":"📨","great depression":"📉","new deal":"🏗️","terrorist attack":"💥","hijack":"✈️","genocide":"☠️","torture":"⛓️","electoral college":"🗳️","popular vote":"🗳️","register to vote":"🗳️","veto":"✋","checks and balances":"⚖️","separation of powers":"⚖️","rule of law":"⚖️","due process":"⚖️","trial by jury":"👥","serve on a jury":"👥","bill of rights":"📜","judicial branch":"⚖️","executive branch":"🏛️","legislative branch":"🏛️","senator":"🏛️","representative":"🏛️","house of representatives":"🏛️","governor":"🏛️","mayor":"🏛️","speaker of the house":"🏛️","cabinet-level position":"🏛️","secretary of state":"🏛️","chief justice":"🧑‍⚖️","we the people":"👥"};
+function emojiFor(word) {
+  const w = String(word || '').toLowerCase().trim();
+  if (!w) return '';
+  const tryW = x => EMO[x] || (x.length > 3 && (EMO[x.replace(/ies$/, 'y')] || EMO[x.replace(/es$/, '')] || EMO[x.replace(/s$/, '')] || EMO[x.replace(/ed$/, '')] || EMO[x.replace(/ing$/, '')] || EMO[x.replace(/ing$/, 'e')])) || '';
+  let e = tryW(w);
+  if (e || !w.includes(' ')) return e;
+  const of = w.split(' of ')[0];
+  if (of !== w) { e = tryW(of) || tryW(of.split(/[\s-]+/).pop()); if (e) return e; }
+  const parts = w.split(/[\s-]+/);
+  return tryW(parts[parts.length - 1]);
+}
+function picHTML(w) {
+  if (!w) return '';
+  if (w.pic) return `<img src="${esc(w.pic)}" alt="">`;
+  const e = w.emo === '-' ? '' : (w.emo || emojiFor(w.word));
+  return e ? `<span class="emo">${esc(e)}</span>` : '';
+}
+// 把图片缩到 360 像素宽、转成 JPEG 存在单词记录里（离线也能看，跟着备份走）
+async function shrinkImage(blob, max = 360) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.78);
+  } finally { URL.revokeObjectURL(url); }
+}
+async function setPic(word, patch) {
+  await update(word, patch);
+  const w = words.get(word);
+  $('dPic').innerHTML = picHTML(w);
+  if (curWord === word) $('nowPic').innerHTML = picHTML(w);
+}
+async function searchPics(q) {
+  const box = $('dPicRes');
+  box.innerHTML = '<div class="muted small" style="margin-top:8px">正在找图…</div>';
+  const enc = encodeURIComponent(q);
+  const urls = [];
+  const add = u => { if (u && !urls.includes(u) && !/\.svg/i.test(u)) urls.push(u); };
+  try {
+    const [a, b] = await Promise.allSettled([
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc}&gsrlimit=6&prop=pageimages&piprop=thumbnail&pithumbsize=400&format=json&origin=*`).then(r => r.json()),
+      fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${enc}&gsrlimit=9&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`).then(r => r.json())
+    ]);
+    if (a.status === 'fulfilled' && a.value.query) Object.values(a.value.query.pages).sort((x, y) => x.index - y.index).forEach(pg => add(pg.thumbnail && pg.thumbnail.source));
+    if (b.status === 'fulfilled' && b.value.query) Object.values(b.value.query.pages).sort((x, y) => x.index - y.index).forEach(pg => add(pg.imageinfo && pg.imageinfo[0] && pg.imageinfo[0].thumburl));
+  } catch (e) {}
+  if (!urls.length) { box.innerHTML = '<div class="muted small" style="margin-top:8px">没找到图片（需要联网）。可以改用「📷 拍照/相册」。</div>'; return; }
+  box.innerHTML = `<div class="muted small" style="margin-top:8px">点一张作为「${esc(q)}」的图片（图片来自维基百科 / Wikimedia Commons）</div><div class="picgrid">` +
+    urls.slice(0, 9).map(u => `<button type="button" data-u="${esc(u)}"><img src="${esc(u)}" alt="" loading="lazy"></button>`).join('') + '</div>';
+}
+async function pickWebPic(u) {
+  const word = dw;
+  try {
+    const blob = await (await fetch(u)).blob();
+    await setPic(word, {pic: await shrinkImage(blob)});
+  } catch (e) { await setPic(word, {pic: u}); } // 转存失败就只记网址，联网时能看
+  $('dPicRes').innerHTML = '';
+  toast('已配图');
+}
+
+/* ---------- 听题抢答 ---------- */
+let lq = null;
+function lqPoolFrom(scope) {
+  const l = scope && lists.get(scope);
+  return (l ? l.words.map(x => words.get(x)).filter(Boolean) : [...words.values()]).filter(w => meaningOf(w) && !isMastered(w));
+}
+function renderLqHome() {
+  const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  if (S.lqScope && !lists.has(S.lqScope)) S.lqScope = '';
+  $('lqScope').innerHTML = opt('', '全部单词') + sortedLists().map(l => opt(l.id, l.name)).join('');
+  $('lqScope').value = S.lqScope;
+  $('lqDir').value = S.lqDir; $('lqN').value = String(S.lqN); $('lqThink').value = String(S.lqThink); $('lqWait').value = String(S.lqWait);
+  const pool = lqPoolFrom(S.lqScope), now = Date.now();
+  const d = pool.filter(w => isDue(w, now)).length, f = pool.filter(isNew).length;
+  $('lqStart').disabled = !pool.length || !hasTTS;
+  $('lqHint').textContent = !hasTTS ? '这个浏览器不支持朗读' : !pool.length ? '这个范围里没有可练的词（都已掌握或没有释义）'
+    : `先出今天到期的 ${d} 个，再出新词（还有 ${f} 个没练过），不够再随机抽。`;
+}
+function startLq() {
+  if (playing) stopPlay();
+  unlockTTS();
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (e) {}
+  const pool = lqPoolFrom(S.lqScope), now = Date.now(), n = +S.lqN || 10;
+  const due = pool.filter(w => isDue(w, now)).sort((a, b) => a.srs.due - b.srs.due);
+  const fresh = pool.filter(isNew).sort(byOld);
+  const rest = shuffle(pool.filter(w => !isDue(w, now) && !isNew(w)));
+  const pick = [...due, ...fresh, ...rest].slice(0, n);
+  if (!pick.length) { toast('没有可练的词'); return; }
+  lq = {tok: Date.now(), queue: pick.map(w => ({word: w.word, first: true, graded: isDue(w, now) || isNew(w)})), total: pick.length, i: 0,
+        yes: 0, no: 0, skip: 0, bad: new Set(), grade: null};
+  $('lq').hidden = false; $('lq').classList.remove('dim');
+  keepAwake(true);
+  runLq(lq.tok);
+}
+function lqSet(step, q, a, pic) { $('lqStep').textContent = step; $('lqQ').textContent = q || ''; $('lqA').textContent = a || ''; $('lqPic').innerHTML = pic || ''; }
+const lqAlive = tok => lq && lq.tok === tok;
+async function runLq(tok) {
+  // 读题 → 倒数 → 读答案 → 等「会/不会」
+  while (lqAlive(tok)) {
+    const item = lq.queue.shift();
+    if (!item) break;
+    const w = words.get(item.word);
+    if (!w) continue;
+    lq.i++;
+    $('lqProg').textContent = `${lq.i} / ${lq.total + lq.bad.size}`;
+    const zh = zhForTTS(w.zh), mean = zh || meaningOf(w);
+    const en2zh = S.lqDir === 'en2zh';
+    $('lqHalves').querySelectorAll('button').forEach(b => b.classList.remove('live'));
+    lqSet(en2zh ? '听英文，想中文意思' : '听中文，说出英文', en2zh ? w.word : mean, '', '');
+    $('lqCount').textContent = '';
+    if (en2zh) { await speak(w.word, S.rateWord); if (!lqAlive(tok)) return; await wait(500); if (!lqAlive(tok)) return; await speak(w.word, S.rateWord); }
+    else if (zh) await speak(zh, S.rateZh, 'zh');
+    else await speak(mean, S.rateEx);
+    if (!lqAlive(tok)) return;
+    for (let k = +S.lqThink || 4; k > 0; k--) { $('lqCount').textContent = k; await wait(1000); if (!lqAlive(tok)) return; }
+    $('lqCount').textContent = '';
+    lqSet('答案', w.word, `${w.ipa ? w.ipa + '　' : ''}${mean}`, picHTML(w));
+    if (en2zh) { if (zh) await speak(zh, S.rateZh, 'zh'); else await speak(mean, S.rateEx); }
+    else { await speak(w.word, S.rateWord); if (!lqAlive(tok)) return; await wait(600); if (!lqAlive(tok)) return; await speak(w.word, S.rateWord); }
+    if (!lqAlive(tok)) return;
+    // 等用户点
+    lq.grade = null;
+    $('lqHalves').querySelectorAll('button').forEach(b => b.classList.add('live'));
+    const ms = (+S.lqWait || 0) * 1000;
+    $('lqStep').textContent = ms ? `会点右边，不会点左边（${S.lqWait} 秒内不点就跳过）` : '会点右边，不会点左边';
+    const t0 = Date.now();
+    while (lqAlive(tok) && lq.grade === null && (!ms || Date.now() - t0 < ms)) await wait(150);
+    if (!lqAlive(tok)) return;
+    $('lqHalves').querySelectorAll('button').forEach(b => b.classList.remove('live'));
+    const g = lq.grade;
+    if (g === null) { lq.skip++; }
+    else {
+      beep(g);
+      if (g) lq.yes++; else lq.no++;
+      if (item.first && item.graded) await schedule(w, g);
+      item.first = false;
+      if (!g && !lq.bad.has(w.word)) { lq.bad.add(w.word); lq.queue.push(item); } // 不会的词这组最后再来一次
+      await wait(400);
+    }
+  }
+  if (lqAlive(tok)) endLq();
+}
+function lqTap(ok) {
+  if (!lq || lq.grade !== null || !$('lqYes').classList.contains('live')) return;
+  lq.grade = ok; interrupt();
+}
+function endLq(quit) {
+  if (!lq) return;
+  const g = lq; lq = null;
+  try { speechSynthesis.cancel(); } catch (e) {}
+  interrupt(); keepAwake(false);
+  if (g.yes + g.no) {
+    const today = ymd(Date.now()), yest = ymd(daysLater(-1));
+    if (S.gLastDay !== today) { S.gStreak = S.gLastDay === yest ? (S.gStreak || 0) + 1 : 1; S.gLastDay = today; saveS(); }
+  }
+  if (quit && !(g.yes + g.no + g.skip)) { $('lq').hidden = true; renderGameHome(); return; }
+  $('lqHalves').querySelectorAll('button').forEach(b => b.classList.remove('live'));
+  $('lqCount').textContent = ''; $('lqPic').innerHTML = ''; $('lqA').textContent = '';
+  $('lqStep').textContent = quit ? '提前结束' : '这一组听完了 🎉';
+  $('lqQ').innerHTML = `<div class="lqend"><b>${g.yes}</b> 会　<b>${g.no}</b> 不会　<b>${g.skip}</b> 只听</div><button id="lqBack" class="btn primary big" style="margin-top:18px">返回练习页</button>`;
+  $('lqBack').onclick = () => { $('lq').hidden = true; renderGameHome(); };
+  renderList();
+}
+
+/* ---------- 模拟面谈官 ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let iv = null, rec = null;
+const IV_STOP = new Set('a an the of to in on at for and or is are was were be been it its this that you your i my we our they their he she his her by with as from do does did have has had can could will would what who when where why how which name one two'.split(' '));
+const NUMW = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+const TENS = {2:'twenty',3:'thirty',4:'forty',5:'fifty',6:'sixty',7:'seventy',8:'eighty',9:'ninety'};
+const numWord = n => n <= 20 ? NUMW[n] : n < 100 ? TENS[Math.floor(n / 10)] + (n % 10 ? ' ' + NUMW[n % 10] : '') : String(n);
+const ivTokens = t => String(t || '').toLowerCase().replace(/\b(\d{1,2})\b/g, (m, d) => numWord(+d)).replace(/[’]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+const stem = x => x.replace(/'s$/, '').replace(/(ies)$/, 'y').replace(/(es|s)$/, '').replace(/(ed|ing)$/, '');
+const YESNO_Q = /^(have|has|had|do|does|did|are|is|was|were|will|would|can|could|should|may)\b/i;
+const WH_Q = /^(what|who|whom|whose|where|when|why|how|which|name)\b/i;
+function ivBuild(scope) {
+  const out = [];
+  const byScene = {};
+  [...sents.values()].sort(byOld).forEach(x => { (byScene[x.scene || '未分类'] = byScene[x.scene || '未分类'] || []).push(x); });
+  for (const [sc, arr] of Object.entries(byScene)) {
+    if (scope && sc !== scope) continue;
+    arr.forEach((x, i) => {
+      const en = x.en.trim(), qi = en.indexOf('?');
+      if (qi < 0) return;
+      const q = en.slice(0, qi + 1).trim(), rest = en.slice(qi + 1).trim();
+      let kind, a = '', keys = [];
+      if (rest && WH_Q.test(q) && rest.split(/\s+/).length <= 14) {
+        kind = 'civics'; a = rest;
+        keys = [...new Set(ivTokens(a).filter(t => t.length > 1 && !IV_STOP.has(t)).map(stem))];
+        if (!keys.length) keys = [...new Set(ivTokens(a).map(stem))];
+      } else {
+        const nx = arr[i + 1];
+        if (nx && !nx.en.includes('?')) a = nx.en;
+        kind = YESNO_Q.test(q) ? 'yesno' : 'open';
+      }
+      out.push({x, q, a, zh: x.zh || '', kind, keys});
+    });
+  }
+  return out;
+}
+function ivScenes() {
+  const m = {};
+  ivBuild('').forEach(it => { const sc = it.x.scene || '未分类'; m[sc] = (m[sc] || 0) + 1; });
+  return m;
+}
+function renderIvHome() {
+  const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  const m = ivScenes(), scs = Object.keys(m).sort((a, b) => a.localeCompare(b, 'zh'));
+  if (S.ivScope && !m[S.ivScope]) S.ivScope = '';
+  const total = Object.values(m).reduce((a, b) => a + b, 0);
+  $('ivScope').innerHTML = opt('', `全部场景（${total} 题）`) + scs.map(sc => opt(sc, `${sc}（${m[sc]} 题）`)).join('');
+  $('ivScope').value = S.ivScope; $('ivN').value = String(S.ivN); $('ivMode').value = S.ivMode; $('ivShow').checked = !!S.ivShow;
+  $('ivStart').disabled = !total;
+  $('ivHint').textContent = !total ? '句库里还没有问句。导入「美国入籍考试词表.json」，或在「管理句库」里加一些带问号的句子。'
+    : (S.ivMode === 'voice' && !SR) ? '这个浏览器不支持语音识别，开始后会自动改成打字回答。iPhone 请用 Safari，并在「设置 → Siri」里打开听写。'
+    : '题目优先出今天到期的和没练过的。语音识别需要联网。';
+}
+function officerVoice() {
+  // 换一个和平时不同的美音当面谈官，更有对话感
+  return voices.find(v => v !== voice && /^(fred|aaron|nicky|samantha|alex)\b/i.test(v.name) && v.localService) || voice;
+}
+function startIv() {
+  if (playing) stopPlay();
+  unlockTTS();
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (e) {}
+  const all = ivBuild(S.ivScope), now = Date.now(), n = +S.ivN || 10;
+  if (!all.length) { toast('这个场景没有问句'); return; }
+  const due = shuffle(all.filter(it => isDueS(it.x, now))), fresh = all.filter(it => !it.x.srs), rest = shuffle(all.filter(it => it.x.srs && !isDueS(it.x, now)));
+  const pick = [...due, ...fresh, ...rest].slice(0, n).map(it => ({...it, graded: isDueS(it.x, now) || !it.x.srs, first: true}));
+  iv = {items: pick, i: -1, good: 0, bad: 0, weak: [], typed: S.ivMode === 'type' || !SR, vo: officerVoice(), cur: null};
+  $('gHome').hidden = true; $('gEnd').hidden = true; $('gPlay').hidden = true; $('ivPlay').hidden = false;
+  $('ivMic').hidden = iv.typed; $('ivTypeBox').hidden = !iv.typed;
+  iv.greet = true;
+  ivNext();
+}
+async function ivAsk(slow) {
+  if (!iv || !iv.cur) return;
+  const me = iv.cur;
+  try { speechSynthesis.cancel(); } catch (e) {}
+  if (iv.greet) { iv.greet = false; await speak('Good morning. Please have a seat. Let\'s begin.', S.rateEx, 'en', iv.vo); if (!iv || iv.cur !== me || rec) return; await wait(300); if (!iv || iv.cur !== me || rec) return; }
+  await speak(me.q, slow ? Math.max(.55, S.rateEx * .78) : S.rateEx, 'en', iv.vo);
+}
+function ivNext() {
+  if (!iv) return;
+  ivStopRec();
+  const c = iv.cur;
+  if (c && c.verdict !== undefined && !c.saved) ivSave(c);
+  iv.i++;
+  if (iv.i >= iv.items.length) { endIv(); return; }
+  const it = iv.cur = iv.items[iv.i];
+  it.verdict = undefined; it.saved = false;
+  $('ivBar').style.width = (iv.i / iv.items.length * 100) + '%';
+  $('ivProg').textContent = `${iv.i + 1} / ${iv.items.length}`;
+  $('ivQ').textContent = it.q; $('ivQ').classList.toggle('hide', !S.ivShow);
+  $('ivReveal').hidden = !!S.ivShow;
+  $('ivMe').innerHTML = `<span class="muted">${iv.typed ? '在下面输入你的回答' : '听完问题后按麦克风回答'}</span>`;
+  $('ivFb').hidden = true; $('ivAct').hidden = true; $('ivIn').value = '';
+  $('ivMic').disabled = false; $('ivMic').textContent = '🎙 开始回答'; $('ivMic').classList.remove('rec');
+  ivAsk();
+}
+async function ivSave(c) {
+  c.saved = true;
+  if (c.verdict) iv.good++; else { iv.bad++; iv.weak.push(c); }
+  if (c.first && c.graded) await schedule(c.x, !!c.verdict, 'sents');
+  c.first = false;
+}
+function ivStopRec() { if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } }
+function ivListen() {
+  if (!iv || !iv.cur) return;
+  if (rec) { try { rec.stop(); } catch (e) {} return; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  interrupt();
+  const r = new SR();
+  r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
+  let finals = [], interim = '', err = '';
+  r.onresult = e => {
+    interim = '';
+    finals = [];
+    for (let i = 0; i < e.results.length; i++) {
+      const res = e.results[i];
+      if (res.isFinal) finals.push([...res].map(a => a.transcript)); else interim += res[0].transcript;
+    }
+    const shown = finals.map(f => f[0]).join(' ') + (interim ? ' ' + interim : '');
+    $('ivMe').textContent = shown.trim() || '…';
+  };
+  r.onerror = e => { err = e.error || 'error'; };
+  r.onend = () => {
+    rec = null;
+    $('ivMic').textContent = '🎙 开始回答'; $('ivMic').classList.remove('rec');
+    let alts = finals.length ? finals[0].map((_, k) => finals.map(f => f[k] || f[0]).join(' ')) : [];
+    if (!alts.length && interim) alts = [interim];
+    if (!alts.length) {
+      const M = {'not-allowed': '麦克风被拒绝了：iPhone 设置 → Safari → 麦克风，改成「允许」，再刷新本页。', 'service-not-allowed': '语音识别没开：iPhone 设置 → Siri 与搜索（或「通用 → 键盘」）里打开「听写」。', network: '语音识别需要联网，现在连不上。可以把回答方式改成「打字回答」。', 'no-speech': '没听到声音，再按一次麦克风试试。', 'audio-capture': '没找到麦克风。'};
+      $('ivMe').innerHTML = `<span class="muted">${esc(M[err] || '没识别到内容，再按一次麦克风试试。')}</span>`;
+      if (err === 'not-allowed' || err === 'service-not-allowed' || err === 'network') { iv.typed = true; $('ivMic').hidden = true; $('ivTypeBox').hidden = false; }
+      return;
+    }
+    ivJudge(alts);
+  };
+  try { r.start(); rec = r; } catch (e) { $('ivMe').textContent = '语音识别启动失败：' + e.message; return; }
+  $('ivMic').textContent = '⏹ 说完了'; $('ivMic').classList.add('rec');
+  $('ivMe').innerHTML = '<span class="muted">正在听…</span>';
+}
+const REPEAT_RE = /\b(repeat|pardon|again|slowly|slower|slow down|didn'?t catch|don'?t understand|do not understand|say that)\b/i;
+function ivScore(it, text) {
+  const toks = ivTokens(text), set = new Set(toks.map(stem));
+  if (it.kind === 'civics') {
+    const hit = it.keys.filter(k => set.has(k));
+    const need = Math.max(1, Math.ceil(it.keys.length * .5));
+    return {ok: hit.length >= need, hit, score: hit.length / Math.max(1, it.keys.length)};
+  }
+  if (it.kind === 'yesno') {
+    const yn = toks.some(t => ['yes', 'yeah', 'yep', 'no', 'nope', 'never', 'not', "haven't", "don't", "didn't", "wasn't", "weren't", "isn't", "aren't"].includes(t)) || /\b(i do|i have|i did|i am|i'm|i will|of course|sure|i understand)\b/i.test(text);
+    return {ok: yn, hit: [], score: yn ? (toks.length >= 3 ? 1 : .6) : 0};
+  }
+  return {ok: toks.length >= 2, hit: [], score: toks.length >= 2 ? 1 : 0};
+}
+function hiText(text, hit) {
+  const hs = new Set(hit);
+  return String(text).split(/(\s+)/).map(t => hs.size && hs.has(stem(ivTokens(t)[0] || '')) ? `<span class="hit">${esc(t)}</span>` : esc(t)).join('');
+}
+function ivJudge(alts) {
+  const it = iv && iv.cur;
+  if (!it) return;
+  alts = alts.map(a => String(a || '').trim()).filter(Boolean);
+  if (!alts.length) return;
+  // 请对方重复：不算答题，放慢再问
+  if (REPEAT_RE.test(alts[0]) && ivTokens(alts[0]).length <= 12 && !(it.kind === 'civics' && ivScore(it, alts[0]).ok)) {
+    const polite = /\b(could|can|would)\b.*\b(please)\b|\bplease\b.*\b(repeat|again|slowly)\b|\bpardon\b/i.test(alts[0]);
+    $('ivMe').textContent = alts[0];
+    const fb = $('ivFb'); fb.className = 'gfb'; fb.hidden = false;
+    fb.innerHTML = polite ? '👍 请求说得很礼貌。面谈官放慢再问一遍。' : '可以说得更完整礼貌：<b>Could you repeat that, please?</b> 面谈官放慢再问一遍。';
+    $('ivQ').classList.remove('hide');
+    speak(polite ? 'Sure.' : 'Of course.', S.rateEx, 'en', iv.vo).then(() => ivAsk(true));
+    return;
+  }
+  let best = null, bestText = alts[0];
+  for (const a of alts) { const r = ivScore(it, a); if (!best || r.score > best.score) { best = r; bestText = a; } }
+  const retry = it.verdict !== undefined;
+  it.answer = bestText;
+  if (!retry) it.verdict = best.ok;
+  $('ivMe').innerHTML = hiText(bestText, best.hit);
+  ivFeedback(it, best, best.ok, retry);
+}
+function ivFeedback(it, r, ok = it.verdict, retry = false) {
+  const fb = $('ivFb');
+  fb.className = 'gfb ' + (ok ? 'ok' : 'bad'); fb.hidden = false;
+  beep(ok);
+  let msg;
+  if (it.kind === 'civics') msg = ok ? `✓ 答对了${r.hit.length ? '（说到了 ' + r.hit.join('、') + '）' : ''}` : `✗ 没说到关键词：${it.keys.join('、')}`;
+  else if (it.kind === 'yesno') msg = ok ? (ivTokens(it.answer).length < 3 ? '✓ 回答清楚了。建议说完整句子，比如参考回答那样。' : '✓ 回答清楚，句子完整。') : '✗ 没听到明确的 yes / no。是非题要先清楚说 Yes 或 No，再补一句完整的话。';
+  else msg = ok ? '✓ 回答完整。' : '✗ 回答太短，试着说一个完整句子。';
+  if (retry) msg += `（复习进度按第一次算：${it.verdict ? '对' : '错'}）`;
+  fb.innerHTML = `<b>${msg}</b>` +
+    `<div style="margin-top:6px"><span class="muted small">问题：</span>${esc(it.q)}</div>` +
+    (it.zh ? `<div class="muted small">${esc(it.zh)}</div>` : '') +
+    (it.a ? `<div style="margin-top:6px"><span class="muted small">参考回答：</span><b>${esc(it.a)}</b></div>` : '') +
+    (it.kind === 'yesno' ? '<div class="muted small" style="margin-top:4px">是非题按你自己的真实情况回答，这里只检查说没说清楚。</div>' : '');
+  $('ivQ').classList.remove('hide'); $('ivReveal').hidden = true;
+  $('ivAct').hidden = false;
+  $('ivFlip').textContent = it.verdict ? '判我错' : '判我对';
+  if (it.a) speak(it.a, S.rateEx);
+}
+function endIv(quit) {
+  if (!iv) return;
+  ivStopRec();
+  const c = iv.cur;
+  if (c && c.verdict !== undefined && !c.saved) ivSave(c);
+  const g = iv; iv = null;
+  try { speechSynthesis.cancel(); } catch (e) {}
+  $('ivPlay').hidden = true;
+  if (g.good + g.bad) {
+    const today = ymd(Date.now()), yest = ymd(daysLater(-1));
+    if (S.gLastDay !== today) { S.gStreak = S.gLastDay === yest ? (S.gStreak || 0) + 1 : 1; S.gLastDay = today; saveS(); }
+  }
+  if (quit && !(g.good + g.bad)) { $('gHome').hidden = false; renderGameHome(); return; }
+  $('gEnd').innerHTML = `<h2>${quit ? '面谈提前结束' : '面谈结束 🎉'}</h2>
+    <div class="gstats" style="margin-top:10px"><div><b>${g.good}</b><span>答得好</span></div><div><b>${g.bad}</b><span>要加强</span></div><div><b>${g.items.length}</b><span>本组题数</span></div><div><b>${S.gStreak || 0}</b><span>连续天数</span></div></div>` +
+    (g.weak.length ? `<div style="text-align:left;margin-top:12px"><div class="sub">要加强的题</div>${g.weak.map(w => `<div class="srow2"><div>${esc(w.q)}<div class="zh">${esc(w.a ? '参考：' + w.a : w.zh)}</div></div></div>`).join('')}</div>` : '') +
+    `<div class="inline" style="justify-content:center;margin-top:12px"><button class="btn primary" id="ivAgainBtn">再来一组</button><button class="btn" id="ivBackBtn">返回</button></div>`;
+  $('gEnd').hidden = false;
+  $('ivAgainBtn').onclick = () => { $('gEnd').hidden = true; startIv(); if (!iv) { $('gHome').hidden = false; renderGameHome(); } };
+  $('ivBackBtn').onclick = () => { $('gEnd').hidden = true; $('gHome').hidden = false; renderGameHome(); };
+}
+
 /* ---------- 分页 ---------- */
 function go(page) {
   document.querySelectorAll('.page').forEach(p => { p.hidden = p.dataset.page !== page; });
   document.querySelectorAll('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.go === page));
   window.scrollTo(0, 0);
   if (page === 'lib') markPlaying();
-  if (page === 'game' && !game) renderGameHome();
+  if (page === 'game' && !game && !iv) renderGameHome();
 }
 
 /* ---------- 事件 ---------- */
 function bind() {
   $('gStart').onclick = startGame;
+  $('lqStart').onclick = startLq;
+  [['lqScope', 'lqScope', 0], ['lqDir', 'lqDir', 0], ['lqN', 'lqN', 1], ['lqThink', 'lqThink', 1], ['lqWait', 'lqWait', 1], ['ivScope', 'ivScope', 0], ['ivN', 'ivN', 1], ['ivMode', 'ivMode', 0]]
+    .forEach(([id, k, num]) => { $(id).onchange = e => { S[k] = num ? +e.target.value : e.target.value; saveS(); renderLqHome(); renderIvHome(); }; });
+  $('ivShow').onchange = e => { S.ivShow = e.target.checked; saveS(); };
+  $('lqYes').onclick = () => lqTap(true);
+  $('lqNo').onclick = () => lqTap(false);
+  $('lqQuit').onclick = () => endLq(true);
+  $('lqDim').onclick = () => $('lq').classList.toggle('dim');
+  $('ivStart').onclick = startIv;
+  $('ivQuit').onclick = () => endIv(true);
+  $('ivAgain').onclick = () => ivAsk();
+  $('ivReveal').onclick = () => { $('ivQ').classList.remove('hide'); $('ivReveal').hidden = true; };
+  $('ivMic').onclick = ivListen;
+  $('ivSubmit').onclick = () => { const t = $('ivIn').value.trim(); if (t) { $('ivIn').value = ''; ivJudge([t]); } };
+  $('ivIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('ivSubmit').click(); } });
+  $('ivNext').onclick = ivNext;
+  $('ivRetry').onclick = () => { if (!iv || !iv.cur) return; $('ivFb').hidden = true; $('ivAct').hidden = true; $('ivMe').innerHTML = '<span class="muted">再答一次（以第一次的结果计入复习进度）</span>'; ivAsk(); };
+  $('ivFlip').onclick = () => { const c = iv && iv.cur; if (!c || c.verdict === undefined) return; c.verdict = !c.verdict; ivFeedback(c, {hit: [], score: 0}); };
   $('gScope').onchange = e => { S.gScope = e.target.value; saveS(); renderGameHome(); };
   $('gNewN').onchange = e => { S.gNewN = +e.target.value; saveS(); renderGameHome(); };
   $('gOpts').onclick = e => { const b = e.target.closest('.gopt'); if (b) answer(b.dataset.v); };
@@ -2083,6 +2641,19 @@ function bind() {
   });
 
   $('dClose').onclick = closeDetail;
+  $('dPicFile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f || !dw) return;
+    try { await setPic(dw, {pic: await shrinkImage(f)}); toast('已配图'); } catch (err) { toast('这张图片读不了，换一张试试'); }
+  };
+  $('dPicWeb').onclick = () => { if (dw) searchPics(dw); };
+  $('dPicRes').onclick = e => { const b = e.target.closest('[data-u]'); if (b) pickWebPic(b.dataset.u); };
+  $('dPicEmo').onclick = async () => {
+    const w = words.get(dw); if (!w) return;
+    const v = prompt('输入一个表情符号（可用键盘上的表情），留空 = 自动，输入 - = 不要图', w.emo || '');
+    if (v === null) return;
+    await setPic(dw, {emo: v.trim(), pic: ''});
+  };
+  $('dPicDel').onclick = async () => { if (dw) await setPic(dw, {pic: '', emo: '-'}); };
   $('dlg').addEventListener('click', e => { if (e.target === $('dlg')) closeDetail(); });
   $('dLists').onclick = async e => {
     const b = e.target.closest('[data-id]'); if (!b) return;
@@ -2109,6 +2680,9 @@ function bind() {
   };
 
   $('zhVoiceSel').onchange = e => { S.zhVoice = e.target.value; saveS(); zhVoice = pickZhVoice(); };
+  $('spMode').value = S.spMode;
+  $('spMode').onchange = e => { S.spMode = e.target.value; saveS(); };
+  $('spTest').onclick = () => { if (playing) stopPlay(); unlockTTS(); const tok = ++playToken; speakSpelling(spellLetters('q-u-a-l-i-t-y'), () => tok === playToken); };
   $('wordReps').value = String(S.wordReps);
   $('wordReps').onchange = e => { S.wordReps = +e.target.value; saveS(); };
   ['readZh', 'readEx', 'readSp'].forEach(k => { $(k).checked = !!S[k]; $(k).onchange = e => { S[k] = e.target.checked; saveS(); }; });
